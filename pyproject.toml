@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "lesstools_backend"
+version = "0.1.0"
+description = ""
+authors = ["dsahdr <dshadr@mail.ru>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Django = "^3.2.3"
+djangorestframework = "^3.12.4"
+psycopg2-binary = "^2.8.6"
+django-dramatiq = "^0.10.0"
+dramatiq = {extras = ["rabbitmq", "watch"], version = "^1.11.0"}
+django-cors-headers = "^3.7.0"
+drf-yasg = "^1.20.0"
+eth-account = "^0.5.4"
+eth-utils = "^1.10.0"
+django-rest-auth = "^0.9.5"
+django-allauth = "^0.44.0"
+APScheduler = "^3.7.0"
+web3 = "^5.19.0"
+python-dateutil = "^2.8.1"
+eth-keys = "^0.3.3"
+bip32utils = "^0.3.post4"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
