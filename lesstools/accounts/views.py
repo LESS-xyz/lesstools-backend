@@ -19,12 +19,7 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
     def validate(self, attrs):
         address = attrs['address']
         signature = attrs['signed_msg']
-        session = self.context['request'].session
-        #message = session.get('metamask_message')
-        message = None
-
-        if message is None:
-            message = attrs['msg']
+        message = attrs['msg']
 
         print('metamask login, address', address, 'message', message, 'signature', signature, flush=True)
         #check if signature is correct
@@ -58,6 +53,7 @@ class UserApiView(generics.RetrieveAPIView):
     queryset = AdvUser.objects.all()
 
     def get_object(self):
+        # Get self data for logged in user
         queryset = self.get_queryset()
         obj = self.request.user
         return obj

@@ -49,7 +49,9 @@ INSTALLED_APPS = [
     'rest_auth',
     'django_dramatiq',
 
-    'lesstools.accounts'
+    'lesstools.accounts',
+    'lesstools.networks',
+    'lesstools.rates',
 ]
 
 MIDDLEWARE = [
