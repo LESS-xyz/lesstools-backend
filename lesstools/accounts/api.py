@@ -15,7 +15,7 @@ def valid_metamask_message(address, message, signature):
     r = int(signature[0:66], 16)
     s = int(add_0x_prefix(signature[66:130]), 16)
     v = int(add_0x_prefix(signature[130:132]), 16)
-    if v not in (27,28):
+    if v not in (27, 28):
         v += 27
 
     message_hash = encode_defunct(text=message)

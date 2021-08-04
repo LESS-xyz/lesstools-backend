@@ -6,6 +6,7 @@ from lesstools.accounts.tasks import check_paid
 from lesstools.networks.tasks import check_payment_address
 from lesstools.rates.tasks import update_rates
 
+
 class Command(BaseCommand):
     help = 'Run blocking scheduler to create periodical tasks'
 

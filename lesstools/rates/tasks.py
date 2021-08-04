@@ -1,5 +1,3 @@
-
-import os
 import sys
 import dramatiq
 import json
@@ -35,7 +33,7 @@ def update_rates():
     # Lock usdt prices to USD cause here cause idk where else
     usd_prices['USDT'] = 1
 
-    print('new usd prices', usd_prices, flush=True)
+    print(f'new usd prices {usd_prices}', flush=True)
 
     for currency, price in usd_prices.items():
         try:

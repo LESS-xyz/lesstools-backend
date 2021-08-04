@@ -9,8 +9,6 @@ from lesstools.accounts.api import valid_metamask_message
 from lesstools.accounts.serializers import UserSerializer
 
 
-
-
 class MetamaskLoginSerializer(SocialLoginSerializer):
     address = serializers.CharField(required=False, allow_blank=True)
     msg = serializers.CharField(required=False, allow_blank=True)
@@ -21,8 +19,8 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
         signature = attrs['signed_msg']
         message = attrs['msg']
 
-        print('metamask login, address', address, 'message', message, 'signature', signature, flush=True)
-        #check if signature is correct
+        print(f'metamask login, address {address} message {message} signature {signature}', flush=True)
+        # check if signature is correct
         if valid_metamask_message(address, message, signature):
             metamask_user = AdvUser.objects.filter(username__iexact=address).first()
             if metamask_user is None:

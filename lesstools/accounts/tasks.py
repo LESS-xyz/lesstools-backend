@@ -2,6 +2,7 @@ import dramatiq
 from django.utils import timezone
 from .models import AdvUser
 
+
 @dramatiq.actor(max_retries=0)
 def check_paid():
     print('starting paid check')

@@ -4,12 +4,14 @@ from lesstools.networks.models import Token
 from lesstools.accounts.models import AdvUser, PlanPayment
 from lesstools.rates.api import calculate_amount
 
+
 def process_native_txs(native_txs):
     if native_txs.get('status') == '1':
         #TODO nearly same logic as in process_token_txs (except accepted_coin logic)
         print(native_txs['result'][0])
     else:
         print('no new native txs')
+
 
 def process_token_txs(token_txs):
     if token_txs.get('status') == '1':
@@ -35,8 +37,8 @@ def process_token_txs(token_txs):
             #TODO what to do with underpayment and overpayment?
             print(f'usd_amount: {usd_amount}')
             payment = PlanPayment.objects.create(
-                user=user, payment_time=timezone.now(), tx_hash = tx['hash'],
-                amount = tx['value'], currency = tx['tokenSymbol']
+                user=user, payment_time=timezone.now(), tx_hash=tx['hash'],
+                amount=tx['value'], currency=tx['tokenSymbol']
             )
             #TODO upgrade from plans.STANDART to plans.PREMIUM?
             if user.plan == AdvUser.plans.FREE:

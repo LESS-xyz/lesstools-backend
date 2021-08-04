@@ -5,17 +5,13 @@ from lesstools.consts import DECIMALS
 
 def get_usd_prices():
     usd_prices = {currency: UsdRate.objects.get(currency=currency).rate for currency in QUERY_TSYMS.keys()}
-    print('current rates', usd_prices, flush=True)
+    print('current rates {usd_prices}', flush=True)
 
     return usd_prices
 
 
 def calculate_amount(original_amount, from_currency, to_currency='USD'):
-    print('Calculating amount, original: {orig}, from {from_curr} to {to_curr}'.format(
-        orig=original_amount,
-        from_curr=from_currency,
-        to_curr=to_currency),
-        flush=True)
+    print(f'Calculating amount, original: {original_amount}, from {from_currency} to {to_currency}', flush=True)
 
     usd_rates = get_usd_prices()
     if to_currency == 'USD':
