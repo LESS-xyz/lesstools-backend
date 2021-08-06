@@ -21,8 +21,6 @@ def process_native_txs(native_txs, network):
             if PlanPayment.objects.filter(tx_hash=tx['hash']).exists():
                 logging.info(f"{tx.get('hash')}: tx_hash already processed, skipping")
                 continue
-            rate_object = UsdRate.objects.get(currency=network.name).values('rate')
-            usd_amount = calculate_amount(tx['value'], rate_object)
             # TODO compare usd_amount with plan prices
             # TODO what to do with underpayment and overpayment?
             logging.info(f'usd_amount: {usd_amount}')
