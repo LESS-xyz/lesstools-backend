@@ -9,20 +9,25 @@ services:
       POSTGRES_PASSWORD:
     volumes:
       - ./.docker/postgres-data:/var/lib/postgresql/data
+    networks:
+      - main
   web:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "${DJANGO_PORT}:8000"
+#    command: "poetry run python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - db
       - rabbitmq
     env_file:
-      - .env
+      - ./env.example
     volumes:
       - ./lesstools/:/code/lesstools/
       - ./static/:/code/static/
+    networks:
+      - main
   dramatiq:
     build:
       context: .
@@ -32,8 +37,10 @@ services:
       - rabbitmq
     restart: unless-stopped
     env_file:
-      - .env
-    command: poetry run python manage.py rundramatiq
+      - ./env.example
+    command: 'poetry run python manage.py rundramatiq'
+    networks:
+      - main
   scheduler:
     build:
       context: .
@@ -43,11 +50,19 @@ services:
       - rabbitmq
     restart: unless-stopped
     env_file:
-      - .env
-    command: poetry run python manage.py run_scheduler
+      - ./env.example
+    command: 'poetry run python manage.py run_scheduler'
+    networks:
+      - main
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.8-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER:
       RABBITMQ_DEFAULT_PASS:
       RABBITMQ_DEFAULT_VHOST:
+      RABBITMQ_DEFAULT_PORT:
+    networks:
+      - main
+
+networks:
+  main:
