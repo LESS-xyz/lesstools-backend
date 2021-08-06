@@ -7,6 +7,7 @@ from rest_auth.registration.views import SocialLoginView
 from rest_framework import serializers
 from lesstools.accounts.api import valid_metamask_message
 from lesstools.accounts.serializers import UserSerializer
+import logging
 
 
 class MetamaskLoginSerializer(SocialLoginSerializer):
@@ -19,14 +20,14 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
         signature = attrs['signed_msg']
         message = attrs['msg']
 
-        print(f'metamask login, address {address} message {message} signature {signature}', flush=True)
+        logging.info(f'metamask login, address {address} message {message} signature {signature}')
         # check if signature is correct
         if valid_metamask_message(address, message, signature):
             metamask_user = AdvUser.objects.filter(username__iexact=address).first()
             if metamask_user is None:
                 self.user = AdvUser(username=address)
                 self.user.save()
-                self.user.generate_keys()
+                # self.user.generate_keys()
                 self.user.set_password(None)
             else:
                 self.user = metamask_user

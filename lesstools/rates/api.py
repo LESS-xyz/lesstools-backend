@@ -1,17 +1,18 @@
 from lesstools.rates.models import UsdRate
 from lesstools.settings import QUERY_TSYMS
 from lesstools.consts import DECIMALS
+import logging
 
 
 def get_usd_prices():
     usd_prices = {currency: UsdRate.objects.get(currency=currency).rate for currency in QUERY_TSYMS.keys()}
-    print('current rates {usd_prices}', flush=True)
+    logging.info('current rates {usd_prices}')
 
     return usd_prices
 
 
 def calculate_amount(original_amount, from_currency, to_currency='USD'):
-    print(f'Calculating amount, original: {original_amount}, from {from_currency} to {to_currency}', flush=True)
+    logging.info(f'Calculating amount, original: {original_amount}, from {from_currency} to {to_currency}')
 
     usd_rates = get_usd_prices()
     if to_currency == 'USD':

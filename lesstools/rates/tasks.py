@@ -6,6 +6,7 @@ import traceback
 
 from lesstools.rates.models import UsdRate
 from lesstools.settings import QUERY_TSYMS, QUERY_FSYM, API_URL
+import logging
 
 
 def get_rates(fsym, tsym, reverse=False):
@@ -27,13 +28,13 @@ def update_rates():
         for tsym, tsym_code in QUERY_TSYMS.items():
             usd_prices[tsym] = get_rates(QUERY_FSYM, tsym_code, reverse=True)
     except Exception as e:
-        print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
+        logging.error('\n'.join(traceback.format_exception(*sys.exc_info())))
         return
 
     # Lock usdt prices to USD cause here cause idk where else
     usd_prices['USDT'] = 1
 
-    print(f'new usd prices {usd_prices}', flush=True)
+    logging.info(f'new usd prices {usd_prices}')
 
     for currency, price in usd_prices.items():
         try:
@@ -44,4 +45,4 @@ def update_rates():
         rate_object.rate = price
         rate_object.save()
 
-    print('saved ok', flush=True)
+    logging.info('saved ok')

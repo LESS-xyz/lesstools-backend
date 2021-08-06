@@ -9,6 +9,8 @@ from eth_utils.hexadecimal import add_0x_prefix
 from eth_account.messages import encode_defunct
 from eth_account import Account
 
+import logging
+
 
 def valid_metamask_message(address, message, signature):
 
@@ -20,8 +22,8 @@ def valid_metamask_message(address, message, signature):
 
     message_hash = encode_defunct(text=message)
     signer_address = Account.recover_message(message_hash, vrs=(v, r, s))
-    print(signer_address)
-    print(address)
+    logging.info(signer_address)
+    logging.info(address)
 
     if signer_address.lower() != address.lower():
         raise ValidationError({'result': 'Incorrect signature'}, code=400)
