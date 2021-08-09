@@ -6,7 +6,7 @@ import logging
 
 def get_usd_prices():
     usd_prices = {currency: UsdRate.objects.get(currency=currency).rate for currency in QUERY_TSYMS.keys()}
-    logging.info('current rates {usd_prices}')
+    logging.info(f'current rates {usd_prices}')
 
     return usd_prices
 
