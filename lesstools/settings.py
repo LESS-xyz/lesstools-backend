@@ -26,7 +26,7 @@ SECRET_KEY = 'pz942#q+@yif&n#%o04z#_%$))f%ebp&=7)dvb)xn6(e%usb04'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['144.76.201.50']
 
 
 # Application definition
