@@ -13,7 +13,7 @@ def check_payment_address():
         web3 = network.get_web3_connection()
         current_block = web3.eth.blockNumber
         logging.info(f'start payment check in {network.name} from block {network.last_processed_block},'
-              f' till block {current_block}')
+                     f' till block {current_block}')
         # get new native and token txs
         new_native_transactions = requests.get(
             network.native_api_url.format(address=settings.PAYMENT_ADDRESS,

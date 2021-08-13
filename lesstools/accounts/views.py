@@ -1,4 +1,4 @@
-from .models import AdvUser
+from .models import AdvUser, PlanPrice
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_auth.registration.serializers import SocialLoginSerializer
@@ -6,7 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_auth.registration.views import SocialLoginView
 from rest_framework import serializers
 from lesstools.accounts.api import valid_metamask_message
-from lesstools.accounts.serializers import UserSerializer
+from lesstools.accounts.serializers import UserSerializer, PriceSerializer
 import logging
 
 
@@ -34,7 +34,6 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
             attrs['user'] = self.user
         else:
             raise PermissionDenied(1034)
-
         return attrs
 
 

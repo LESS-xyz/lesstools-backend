@@ -9,6 +9,8 @@ from eth_utils.hexadecimal import add_0x_prefix
 from eth_account.messages import encode_defunct
 from eth_account import Account
 
+from lesstools.accounts.models import PlanPrice
+
 import logging
 
 
@@ -37,3 +39,10 @@ def generate_metamask_message(request):
     request.session['metamask_message'] = generated_message
 
     return Response(generated_message)
+
+
+@api_view(http_method_names=['GET'])
+def plan_price(request):
+    """Plan price"""
+    price = PlanPrice.objects.all().first()
+    return Response(price.price)

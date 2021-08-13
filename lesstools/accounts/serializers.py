@@ -13,3 +13,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_paid_until(self, obj):
         return obj.payments.order_by('-end_time').first().end_time \
                if obj.payments.order_by('-end_time').first() else None
+
+
+class PriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PlanPrice
+        read_only_field = ('price',)

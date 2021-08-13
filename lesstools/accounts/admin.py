@@ -1,6 +1,4 @@
 from django.contrib import admin
+from lesstools.accounts.models import PlanPrice
 
-# Register your models here.
-from lesstools.analytics.models import Token
-
-admin.site.register(Token)
+admin.site.register(PlanPrice)
