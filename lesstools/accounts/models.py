@@ -13,7 +13,7 @@ class AdvUser(AbstractUser):
         PREMIUM = 'Premium'
     plan = models.CharField(max_length=10, choices=plans.choices, default=plans.FREE)
     # on dextools pair page has uniswap pair address in url, so i guess array of addresses should work
-    favourite_pairs = ArrayField(models.CharField(max_length=50))
+    favourite_pairs = ArrayField(models.CharField(max_length=50), null=True)
 
 
 class PlanPayment(models.Model):

@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'lesstools.networks',
     'lesstools.rates',
     'lesstools.pairs',
+    'lesstools.analytics',
 ]
 
 MIDDLEWARE = [

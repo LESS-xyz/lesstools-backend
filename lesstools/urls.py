@@ -37,6 +37,6 @@ urlpatterns = [
     re_path(r'^api/v1/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
     path('django-admin/', admin.site.urls),
-    path('api/v1/accounts/', include('lesstools.accounts.urls'))
-
+    path('api/v1/accounts/', include('lesstools.accounts.urls')),
+    path('api/v1/analytics/', include('lesstools.analytics.urls'))
 ]

@@ -17,12 +17,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${DJANGO_PORT}:8000"
-#    command: "poetry run python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - db
       - rabbitmq
     env_file:
-      - ./env.example
+      - .env
     volumes:
       - ./lesstools/:/code/lesstools/
       - ./static/:/code/static/
@@ -37,8 +36,8 @@ services:
       - rabbitmq
     restart: unless-stopped
     env_file:
-      - ./env.example
-    command: 'poetry run python manage.py rundramatiq'
+      - .env
+    command: poetry run python manage.py rundramatiq
     networks:
       - main
   scheduler:
@@ -50,17 +49,14 @@ services:
       - rabbitmq
     restart: unless-stopped
     env_file:
-      - ./env.example
-    command: 'poetry run python manage.py run_scheduler'
+      - .env
+    command: poetry run python manage.py run_scheduler
     networks:
       - main
   rabbitmq:
     image: rabbitmq:3.8-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER:
-      RABBITMQ_DEFAULT_PASS:
-      RABBITMQ_DEFAULT_VHOST:
-      RABBITMQ_DEFAULT_PORT:
+    env_file:
+      - .env
     networks:
       - main
 
