@@ -1,8 +1,8 @@
 from aiogram import types
-from settings import dp
+from tgbot.settings import DP
 
 
-@dp.message_handler(commands=['new_pair'])
+@DP.message_handler(commands=['new_pair'])
 async def new_pair(message: types.Message, **kwargs):
     """Send new pair"""
     await message.reply("New pair")

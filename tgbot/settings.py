@@ -2,7 +2,7 @@ import os
 import django
 import logging
 
-from setting_env import BOT_TOKEN
+# from setting_env import BOT_TOKEN
 from aiogram import Bot, Dispatcher
 
 
@@ -14,7 +14,7 @@ django.setup()
 logging.basicConfig(level=logging.INFO)
 
 # Initialize bot and dispatcher
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token='BOT_TOKEN')    # todo change to actual token
 DP = Dispatcher(bot)
 SKIP_UPDATES = True
 TIMEOUT = 20
