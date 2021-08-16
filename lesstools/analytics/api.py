@@ -108,18 +108,16 @@ def mapping_update(run_full_update=False):
                 normalized_address = None
 
             if run_full_update:
-                # be aware that signals won't work while using .update() method on query sets
-                Token.objects.filter(cmc_id=token['id']).update(
-                    cmc_id=token['id'],
-                    name=token['name'],
-                    symbol=token['symbol'],
-                    eth_address=normalized_address if (normalized_address is not None and
-                                                       token['platform']['id'] == Token.ETH_PLATFORM_CMC_ID) else None,
-                    bsc_address=normalized_address if (normalized_address is not None and
-                                                       token['platform']['id'] == Token.BSC_PLATFORM_CMC_ID) else None,
-                    polygon_address=normalized_address if (normalized_address is not None and
-                                                           token['platform'][
-                                                               'id'] == Token.POLYGON_PLATFORM_CMC_ID) else None)
+                Token.objects.update_or_create(cmc_id=token['id'], defaults={
+                    'cmc_id': token['id'],
+                    'name': token['name'],
+                    'symbol': token['symbol'],
+                    'eth_address': normalized_address if (normalized_address is not None and
+                                                          token['platform']['id'] == Token.ETH_PLATFORM_CMC_ID) else None,
+                    'bsc_address': normalized_address if (normalized_address is not None and
+                                                          token['platform']['id'] == Token.BSC_PLATFORM_CMC_ID) else None,
+                    'polygon_address': normalized_address if (normalized_address is not None and
+                                                              token['platform']['id'] == Token.POLYGON_PLATFORM_CMC_ID) else None})
             elif not Token.objects.filter(cmc_id=token['id']).exists():
                 Token(cmc_id=token['id'],
                       name=token['name'],
