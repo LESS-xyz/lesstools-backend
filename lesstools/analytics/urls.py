@@ -1,5 +1,5 @@
 from django.urls import path
-from lesstools.analytics.api import pair_info_retrieval, manual_cmc_mapping_update
+from lesstools.analytics.views import pair_info_retrieval, manual_cmc_mapping_update
 
 urlpatterns = [
     path('pair_info', pair_info_retrieval, name='Pair Explorer'),

@@ -1,3 +1,4 @@
 from django.contrib import admin
+from lesstools.pairs import models
 
-# Register your models here.
+admin.site.register(models.Pairs)
