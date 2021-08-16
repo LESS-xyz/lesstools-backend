@@ -9,22 +9,23 @@ from lesstools.consts import MAX_DIGITS
 
 class PlanPrice(models.Model):
     """PlanPayment price. Free->Premium=2x price"""
-    price = models.PositiveSmallIntegerField(blank=False, help_text='You can have only one price object,'
-                                                                    ' and can not delete this object')
+    price = models.PositiveSmallIntegerField(blank=False, help_text='You should have only one price record,'
+                                                                    ' and should not delete it.'
+                                                                    'It is Standard plan price.'
+                                                                    'Premium is assumed to be 2x bigger')
 
 
 class AdvUser(AbstractUser):
-    class plans(models.TextChoices):
+    class Plans(models.TextChoices):
         FREE = 'Free'
-        STANDART = 'Standart'
+        STANDARD = 'Standard'
         PREMIUM = 'Premium'
 
-    plan = models.CharField(max_length=10, choices=plans.choices, default=plans.FREE)
+    plan = models.CharField(max_length=10, choices=Plans.choices, default=Plans.FREE)
     # Users' favorite pairs
     # on dextools pair page has uniswap pair address in url, so i guess array of addresses should work
     favourite_pairs = ArrayField(models.CharField(max_length=50), null=True)
     # favourite_pairs = models.ForeignKey(Pairs, on_delete=models.CASCADE, null=True)
-
 
 
 class PlanPayment(models.Model):

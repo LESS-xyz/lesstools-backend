@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
+from lesstools.accounts.models import AdvUser
+
 
 class Token(models.Model):
     ETH_PLATFORM_CMC_ID = 1027
@@ -27,3 +29,43 @@ class Token(models.Model):
     website_url = models.CharField(max_length=100, null=True)
     chat_urls = ArrayField(models.CharField(max_length=100), null=True)
     twitter_url = models.CharField(max_length=100, null=True)
+
+
+class Pair(models.Model):
+    class Platforms(models.TextChoices):
+        ETH_PLATFORM = 'ETH'
+        BSC_PLATFORM = 'BSC'
+        POLYGON_PLATFORM = 'POLYGON'
+
+    address = models.CharField(max_length=50)
+    platform = models.CharField(max_length=10, choices=Platforms.choices)
+
+    class Meta:
+        unique_together = ('address', 'platform',)
+
+    # the **bold** one, analytics of which are shown on the Pair Explorer
+    # does not necessary reflect pair base/quote in contract
+    # can be Null if no additional token's info can be retrieved
+    token_being_reviewed = models.ForeignKey(to=Token, on_delete=models.RESTRICT, null=True)
+
+    likes = models.PositiveIntegerField(default=0, editable=False)
+    dislikes = models.PositiveIntegerField(default=0, editable=False)
+
+
+class UserPairVote(models.Model):
+    LIKE = 1
+    DISLIKE = -1
+    NEUTRAL = 0
+
+    VOTES = (
+        (DISLIKE, 'Dislike'),
+        (LIKE, 'Like'),
+        (NEUTRAL, 'Neutral')
+    )
+
+    vote = models.SmallIntegerField(choices=VOTES, editable=False)
+    user = models.ForeignKey(AdvUser, on_delete=models.RESTRICT)
+    pair = models.ForeignKey(Pair, on_delete=models.RESTRICT)
+
+    class Meta:
+        unique_together = ('user', 'pair',)
