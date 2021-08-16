@@ -20,9 +20,9 @@ class Token(models.Model):
     fully_diluted_market_cap = models.DecimalField(max_digits=20, decimal_places=5, null=True)
     holders_count = models.PositiveIntegerField(null=True)
 
-    eth_address = models.CharField(max_length=50, null=True)
-    bsc_address = models.CharField(max_length=50, null=True)
-    polygon_address = models.CharField(max_length=50, null=True)
+    eth_address = models.CharField(max_length=50, unique=True, null=True)
+    bsc_address = models.CharField(max_length=50, unique=True, null=True)
+    polygon_address = models.CharField(max_length=50, unique=True, null=True)
 
     website_url = models.CharField(max_length=100, null=True)
     chat_urls = ArrayField(models.CharField(max_length=100), null=True)

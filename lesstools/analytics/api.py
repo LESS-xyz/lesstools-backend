@@ -59,6 +59,7 @@ def manual_cmc_mapping_update(request):
         required=['token_address', 'token_name', 'token_symbol', 'platform']
     ),
     responses={'200': TokenSerializer(),
+               '501': 'No information is available for specified token',
                '503': 'External API unavailable'}
 )
 @api_view(http_method_names=['POST'])
@@ -72,16 +73,22 @@ def pair_info_retrieval(request):
     try:
         info = info_from_cmc(token_address, token_name, token_symbol, platform)
     except RuntimeError:
-        return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE, data='CoinMarketCap API unavailable')
 
     if info is not None:
+        try:
+            info = try_extend_if_needed(info, platform)
+        except RuntimeError as err:
+            return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE, data=err.args)
         return Response(TokenSerializer(info).data)
-    else:
+    elif platform == 'ETH':
         try:
             info = info_from_ethplorer(token_address)
             return Response(TokenSerializer(info).data)
         except RuntimeError:
-            return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE, data='Ethplorer API unavailable')
+    else:
+        return Response(status=status.HTTP_501_NOT_IMPLEMENTED, data='No information is available for specified token')
 
 
 def mapping_update(run_full_update=False):
@@ -109,7 +116,6 @@ def mapping_update(run_full_update=False):
 
             if run_full_update:
                 Token.objects.update_or_create(cmc_id=token['id'], defaults={
-                    'cmc_id': token['id'],
                     'name': token['name'],
                     'symbol': token['symbol'],
                     'eth_address': normalized_address if (normalized_address is not None and
@@ -140,6 +146,36 @@ def mapping_update(run_full_update=False):
         else:
             print('error on CMC data retrieval')
             raise RuntimeError()
+
+
+def try_extend_if_needed(token: Token, platform: str):
+    if platform == 'ETH':
+        ethplorer_request = requests.get(ETHPLORER_TOKEN_INFO_API_URL.format(address=token.eth_address),
+                                         params={'apiKey': ETHPLORER_API_KEY})
+        if ethplorer_request.status_code == 200:
+            data = ethplorer_request.json()
+        else:
+            print('error on Ethplorer data retrieval')
+            raise RuntimeError('Ethplorer API unavailable')
+
+        if token.price_in_usd is None or token.price_in_usd == 0:
+            token.price_in_usd = data['price']['rate'] if (data['price'] and data['price']['currency'] == 'USD') else None
+        if token.total_supply is None or token.total_supply == 0:
+            token.total_supply = data['totalSupply']
+        if token.holders_count is None or token.holders_count == 0:
+            token.holders_count = data['holdersCount']
+        if token.website_url is None:
+            token.website_url = data['website'] if 'website' in data else None
+        if token.chat_urls is None:
+            token.chat_urls = [data['telegram']] if 'telegram' in data else None
+        if token.twitter_url is None:
+            token.twitter_url = 'https://twitter.com/' + data['twitter'] if 'twitter' in data else None
+
+    # todo data extension for other platforms
+
+    token.save()
+
+    return token
 
 
 def info_from_ethplorer(token_address):
@@ -223,9 +259,9 @@ def info_from_cmc(token_address, token_name, token_symbol, platform):
         token.holders_count = data['holders']['holderCount']
 
     if 'urls' in data:
-        token.website_url = data['urls']['website'][0]
-        token.chat_urls = data['urls']['chat']
-        token.twitter_url = data['urls']['twitter'][0]
+        token.website_url = data['urls']['website'][0] if len(data['urls']['website']) > 0 else None
+        token.chat_urls = data['urls']['chat'] if len(data['urls']['chat']) > 0 else None
+        token.twitter_url = data['urls']['twitter'][0] if len(data['urls']['twitter']) > 0 else None
 
     token.save()
 
