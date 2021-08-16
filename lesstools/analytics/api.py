@@ -74,7 +74,7 @@ def try_extend_if_needed(token: Token, platform: str):
             data = ethplorer_request.json()
         else:
             print('error on Ethplorer data retrieval')
-            raise RuntimeError('Ethplorer API unavailable')
+            return token
 
         if token.price_in_usd is None or token.price_in_usd == 0:
             token.price_in_usd = data['price']['rate'] if (data['price'] and data['price']['currency'] == 'USD') else None
@@ -103,7 +103,7 @@ def info_from_ethplorer(token_address):
         data = ethplorer_request.json()
     else:
         print('error on Ethplorer data retrieval')
-        raise RuntimeError()
+        return None
 
     token, created = Token.objects.update_or_create(eth_address=token_address, defaults={
         'name': data['name'],
@@ -117,7 +117,7 @@ def info_from_ethplorer(token_address):
     })
 
     if created:
-        print(f'new token "{token.symbol}" saved to the database')
+        print(f'token "{token.symbol}" saved to the database')
 
     return token
 
@@ -144,7 +144,7 @@ def info_from_cmc(token_address, token_name, token_symbol, platform):
         data = cmc_request.json()['data']
     else:
         print('error on CMC data retrieval')
-        raise RuntimeError()
+        return None
 
     if 'platforms' in data:
         for platform in data['platforms']:
