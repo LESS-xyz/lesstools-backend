@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'lesstools.accounts',
     'lesstools.networks',
     'lesstools.rates',
-    'lesstools.pairs',
     'lesstools.analytics',
 ]
 

@@ -131,7 +131,7 @@ def pair_vote(request):
         user_address = Web3.toChecksumAddress(request.user.username)
     # if it's anonymous user or the one without hex-string username (e.g. admins)
     except ValueError:
-        print(f'unsupported type of user is retrieving information ({request.user} in this case)')
+        print(f'unsupported type of user is trying to vote ({request.user} in this case)')
         return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
 
     pair_address = Web3.toChecksumAddress(request.data['pair_address'])

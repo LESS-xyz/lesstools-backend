@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pairs', '0002_remove_pairs_rating'),
         ('accounts', '0004_alter_advuser_favourite_pairs'),
     ]
 
