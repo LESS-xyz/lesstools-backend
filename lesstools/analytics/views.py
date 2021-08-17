@@ -6,7 +6,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -55,7 +55,6 @@ def manual_cmc_mapping_update(request):
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'user_address': openapi.Schema(type=openapi.TYPE_STRING),
             'pair_address': openapi.Schema(type=openapi.TYPE_STRING),
             'token_address': openapi.Schema(type=openapi.TYPE_STRING),
             'token_name': openapi.Schema(type=openapi.TYPE_STRING),
@@ -68,7 +67,13 @@ def manual_cmc_mapping_update(request):
 )
 @api_view(http_method_names=['POST'])
 def pair_info_retrieval(request):
-    user_address = Web3.toChecksumAddress(request.data['user_address']) if 'user_address' in request.data else None
+    try:
+        user_address = Web3.toChecksumAddress(request.user.username)
+    # if it's anonymous user or the one without hex-string username (e.g. admins)
+    except ValueError:
+        print(f'not authenticated or admin user is retrieving information ({request.user} in this case)')
+        user_address = None
+
     pair_address = Web3.toChecksumAddress(request.data['pair_address'])
     token_address = Web3.toChecksumAddress(request.data['token_address'])
     token_name = request.data['token_name']
@@ -99,3 +104,59 @@ def pair_info_retrieval(request):
             return Response(UserPairVoteSerializer(user_pair_vote_filter.first()).data)
 
     return Response(PairSerializer(pair_info).data)
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Like or dislike the pair ot change the community trust.\n"
+                          "It's also possible to cancel vote if the sent vote equals the one saved to the DB",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'pair_address': openapi.Schema(type=openapi.TYPE_STRING),
+            'platform': openapi.Schema(type=openapi.TYPE_STRING, enum=['ETH', 'BSC', 'POLYGON']),
+            'vote': openapi.Schema(type=openapi.TYPE_INTEGER, enum=[-1, 1]),
+        },
+        required=['pair_address', 'vote']
+    ),
+    responses={'200': UserPairVoteSerializer(),
+               '403': 'Invalid authentication (no such user in the DB)',
+               '404': 'No such pair in the DB',
+               '406': 'Unsupported user type for this operation'}
+)
+@api_view(http_method_names=['POST'])
+@permission_classes([IsAuthenticated])
+def pair_vote(request):
+    try:
+        user_address = Web3.toChecksumAddress(request.user.username)
+    # if it's anonymous user or the one without hex-string username (e.g. admins)
+    except ValueError:
+        print(f'unsupported type of user is retrieving information ({request.user} in this case)')
+        return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    pair_address = Web3.toChecksumAddress(request.data['pair_address'])
+    platform = request.data['platform'].upper()
+    vote = request.data['vote']
+
+    user_filter = AdvUser.objects.filter(username__iexact=user_address)
+    if not user_filter.exists():
+        return Response(f'No user {user_address} record in the database', status=status.HTTP_403_FORBIDDEN)
+    else:
+        pair_filter = Pair.objects.filter(address=pair_address, platform=platform)
+        if not pair_filter.exists():
+            return Response(f'No pair {pair_address} record in the database', status=status.HTTP_404_NOT_FOUND)
+        else:
+            user = user_filter.first()
+            pair = pair_filter.first()
+            user_pair_vote, created = UserPairVote.objects.get_or_create(user__username__iexact=user_address,
+                                                                         pair__address__iexact=pair_address,
+                                                                         defaults={'user': user,
+                                                                                   'pair': pair})
+            if created:
+                user_pair_vote.vote = vote
+                user_pair_vote.save()
+            else:
+                user_pair_vote.vote = UserPairVote.NEUTRAL if user_pair_vote.vote == vote else vote
+                user_pair_vote.save()
+
+            return Response(UserPairVoteSerializer(user_pair_vote).data)

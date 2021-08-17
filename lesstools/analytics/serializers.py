@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from . import models
+from .models import UserPairVote
 
 
 class TokenSerializer(serializers.ModelSerializer):
@@ -12,10 +13,18 @@ class TokenSerializer(serializers.ModelSerializer):
 
 class PairSerializer(serializers.ModelSerializer):
     token_being_reviewed = TokenSerializer()
+    likes = serializers.SerializerMethodField()
+    dislikes = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Pair
         fields = ('address', 'platform', 'likes', 'dislikes', 'token_being_reviewed')
+
+    def get_likes(self, obj):
+        return obj.votes.filter(vote=UserPairVote.LIKE).count()
+
+    def get_dislikes(self, obj):
+        return obj.votes.filter(vote=UserPairVote.DISLIKE).count()
 
 
 class UserPairVoteSerializer(serializers.ModelSerializer):

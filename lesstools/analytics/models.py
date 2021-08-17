@@ -48,9 +48,6 @@ class Pair(models.Model):
     # can be Null if no additional token's info can be retrieved
     token_being_reviewed = models.ForeignKey(to=Token, on_delete=models.RESTRICT, null=True)
 
-    likes = models.PositiveIntegerField(default=0, editable=False)
-    dislikes = models.PositiveIntegerField(default=0, editable=False)
-
 
 class UserPairVote(models.Model):
     LIKE = 1
@@ -63,9 +60,9 @@ class UserPairVote(models.Model):
         (NEUTRAL, 'Neutral')
     )
 
-    vote = models.SmallIntegerField(choices=VOTES, editable=False)
-    user = models.ForeignKey(AdvUser, on_delete=models.RESTRICT)
-    pair = models.ForeignKey(Pair, on_delete=models.RESTRICT)
+    vote = models.SmallIntegerField(choices=VOTES, editable=False, default=NEUTRAL)
+    user = models.ForeignKey(AdvUser, on_delete=models.RESTRICT, related_name='votes')
+    pair = models.ForeignKey(Pair, on_delete=models.RESTRICT, related_name='votes')
 
     class Meta:
         unique_together = ('user', 'pair',)
