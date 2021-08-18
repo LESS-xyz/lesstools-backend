@@ -98,9 +98,10 @@ def pair_info_retrieval(request):
         user_pair_vote_filter = UserPairVote.objects.filter(user__username__iexact=user_address,
                                                             pair__address__iexact=pair_address)
         if user_pair_vote_filter.exists():
-            return Response(UserPairVoteSerializer(user_pair_vote_filter.first()).data)
+            return Response(UserPairVoteSerializer(user_pair_vote_filter.first(),
+                                                   context={'username': user_address}).data)
 
-    return Response(PairSerializer(pair_info).data)
+    return Response(PairSerializer(pair_info, context={'username': user_address}).data)
 
 
 @swagger_auto_schema(
@@ -156,4 +157,4 @@ def pair_vote(request):
                 user_pair_vote.vote = UserPairVote.NEUTRAL if user_pair_vote.vote == vote else vote
                 user_pair_vote.save()
 
-            return Response(UserPairVoteSerializer(user_pair_vote).data)
+            return Response(UserPairVoteSerializer(user_pair_vote, context={'username': user_address}).data)

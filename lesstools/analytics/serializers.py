@@ -16,15 +16,22 @@ class PairSerializer(serializers.ModelSerializer):
     likes = serializers.SerializerMethodField()
     dislikes = serializers.SerializerMethodField()
 
+    is_favourite_of_current_user = serializers.SerializerMethodField('_is_favourite')
+
     class Meta:
         model = models.Pair
-        fields = ('address', 'platform', 'likes', 'dislikes', 'token_being_reviewed')
+        fields = ('address', 'platform', 'likes', 'dislikes', 'token_being_reviewed', 'is_favourite_of_current_user')
 
     def get_likes(self, obj):
         return obj.votes.filter(vote=UserPairVote.LIKE).count()
 
     def get_dislikes(self, obj):
         return obj.votes.filter(vote=UserPairVote.DISLIKE).count()
+
+    # check is current pair is favourite for the current user
+    def _is_favourite(self, obj):
+        username = self.context.get('username')
+        return obj.favourite_of.filter(username__iexact=username).exists()
 
 
 class UserPairVoteSerializer(serializers.ModelSerializer):
