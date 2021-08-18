@@ -6,7 +6,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_auth.registration.views import SocialLoginView
 from rest_framework import serializers
 from lesstools.accounts.api import valid_metamask_message
-from lesstools.accounts.serializers import UserSerializer, PriceSerializer
+from lesstools.accounts.serializers import UserSerializer
+
 import logging
 
 
@@ -55,4 +56,3 @@ class UserApiView(generics.RetrieveAPIView):
         queryset = self.get_queryset()
         obj = self.request.user
         return obj
-

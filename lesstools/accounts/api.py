@@ -1,17 +1,28 @@
 from random import choice
 from string import ascii_letters
 
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
+from web3 import Web3
 from eth_utils.hexadecimal import add_0x_prefix
 from eth_account.messages import encode_defunct
 from eth_account import Account
 
-from lesstools.accounts.models import PlanPrice
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
+from rest_framework import status
+from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+
+from lesstools.accounts.models import PlanPrice, AdvUser
 
 import logging
+
+from lesstools.analytics.models import Pair
+from lesstools.settings import FAVOURITE_PAIRS_LIMIT
 
 
 def valid_metamask_message(address, message, signature):
@@ -46,3 +57,98 @@ def plan_price(request):
     """Plan price"""
     price = PlanPrice.objects.all().first()
     return Response(price.price)
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Get favourite pairs of the current user for the specified platform",
+    manual_parameters=[
+        openapi.Parameter(name='platform',
+                          required=True,
+                          in_='path',
+                          description='Platform name (e.g. "ETH")',
+                          type='string',
+                          enum=['ETH', 'BSC', 'POLYGON'])
+    ],
+    responses={'200': serializers.ListSerializer(child=serializers.CharField(max_length=50)),
+               '403': 'Unsupported user type for this operation'}
+)
+@api_view(http_method_names=['GET'])
+@permission_classes([IsAuthenticated])
+def get_favourite_pairs(request, platform='ETH'):
+    try:
+        username = Web3.toChecksumAddress(request.user.username)
+    # if it's a user without hex-string username (e.g. admins)
+    except ValueError:
+        # for testing purposes let admins have favourite pairs
+        user_filter = AdvUser.objects.filter(username__iexact=request.user.username)
+        if user_filter.exists() and user_filter.first().is_staff:
+            username = request.user.username
+        else:
+            print(f'unsupported type of user is retrieving favourite pairs ({request.user} in this case)')
+            return Response('Unsupported user type for this operation', status=status.HTTP_403_FORBIDDEN)
+
+    user = AdvUser.objects.filter(username__iexact=username).first()
+    platform = platform.upper()
+
+    favourite_pairs = []
+    for pair in user.favourite_pairs.filter(platform=platform).all():
+        favourite_pairs.append(pair.address)
+
+    return Response(favourite_pairs, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Add/remove pair to/from favourites.\n"
+                          "If the specified pair is already favourite, it will be removed from favourites.\n"
+                          "Returns True if pair is added to favourites, False - if removed",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'pair_address': openapi.Schema(type=openapi.TYPE_STRING),
+            'platform': openapi.Schema(type=openapi.TYPE_STRING, enum=['ETH', 'BSC', 'POLYGON']),
+        },
+        required=['pair_address', 'platform']
+    ),
+    responses={'200': 'True if pair is now favourite, False otherwise',
+               '207': 'Favourite pairs count limit exceeded for the user',
+               '403': 'Unsupported user type for this operation',
+               '404': 'No such pair in the DB'}
+)
+@api_view(http_method_names=['POST'])
+@permission_classes([IsAuthenticated])
+def add_or_remove_favourite_pair(request):
+    try:
+        username = Web3.toChecksumAddress(request.user.username)
+    # if it's a user without hex-string username (e.g. admins)
+    except ValueError:
+        # for testing purposes let admins have favourite pairs
+        user_filter = AdvUser.objects.filter(username__iexact=request.user.username)
+        if user_filter.exists() and user_filter.first().is_staff:
+            username = request.user.username
+        else:
+            print(f'unsupported type of user is trying to add/remove favourite pairs ({request.user} in this case)')
+            return Response('Unsupported user type for this operation', status=status.HTTP_403_FORBIDDEN)
+
+    user = AdvUser.objects.filter(username__iexact=username).first()
+
+    pair_address = Web3.toChecksumAddress(request.data['pair_address'])
+    platform = request.data['platform'].upper()
+
+    pair_filter = Pair.objects.filter(address=pair_address, platform=platform)
+    if not pair_filter.exists():
+        return Response(f'No pair {pair_address} record in the database', status=status.HTTP_404_NOT_FOUND)
+    else:
+        pair = pair_filter.first()
+        if user.favourite_pairs.filter(address=pair_address, platform=platform).exists():
+            user.favourite_pairs.remove(pair)
+            return Response(False, status=status.HTTP_200_OK)
+        if user.plan == AdvUser.Plans.FREE and user.favourite_pairs.all().count() < FAVOURITE_PAIRS_LIMIT:
+            user.favourite_pairs.add(pair)
+            return Response(True, status=status.HTTP_200_OK)
+        else:
+            return Response(f'Favourite pairs count limit exceeded for the user. Current plan: {user.plan}.'
+                            f'Limit of {FAVOURITE_PAIRS_LIMIT} for user {user.username} is reached',
+                            status=status.HTTP_207_MULTI_STATUS)
+

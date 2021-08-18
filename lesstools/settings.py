@@ -28,6 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '144.76.201.50']
 
+# LessTools platform settings
+FAVOURITE_PAIRS_LIMIT = 10
+
 
 # Application definition
 

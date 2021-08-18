@@ -1,5 +1,3 @@
-from typing import Union
-
 from web3 import Web3
 
 from drf_yasg import openapi
@@ -12,8 +10,7 @@ from rest_framework.response import Response
 
 from lesstools.accounts.models import AdvUser
 from lesstools.analytics.models import Pair, UserPairVote
-from lesstools.analytics.serializers import TokenSerializer, PairSerializer, UserPairVoteSerializer, \
-    ResponseUnionExampleSerializer
+from lesstools.analytics.serializers import PairSerializer, UserPairVoteSerializer, ResponseUnionExampleSerializer
 
 from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed
 
@@ -129,7 +126,7 @@ def pair_info_retrieval(request):
 def pair_vote(request):
     try:
         user_address = Web3.toChecksumAddress(request.user.username)
-    # if it's anonymous user or the one without hex-string username (e.g. admins)
+    # if it's a user without hex-string username (e.g. admins)
     except ValueError:
         print(f'unsupported type of user is trying to vote ({request.user} in this case)')
         return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)

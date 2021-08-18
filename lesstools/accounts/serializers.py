@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.AdvUser
         read_only_field = ('paid_until',)
-        fields = read_only_field + ('id', 'username', 'plan', 'favourite_pairs')
+        fields = read_only_field + ('id', 'username', 'plan')
 
     def get_paid_until(self, obj):
         return obj.payments.order_by('-end_time').first().end_time \

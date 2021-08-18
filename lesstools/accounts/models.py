@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import ArrayField
 from datetime import timedelta
 
 from lesstools.consts import MAX_DIGITS
@@ -21,10 +20,8 @@ class AdvUser(AbstractUser):
         PREMIUM = 'Premium'
 
     plan = models.CharField(max_length=10, choices=Plans.choices, default=Plans.FREE)
-    # Users' favorite pairs
-    # on dextools pair page has uniswap pair address in url, so i guess array of addresses should work
-    favourite_pairs = ArrayField(models.CharField(max_length=50), null=True)
-    # favourite_pairs = models.ForeignKey(Pairs, on_delete=models.CASCADE, null=True)
+    # avoiding circular import error
+    favourite_pairs = models.ManyToManyField('analytics.Pair', blank=True, related_name='favourite_of')
 
 
 class PlanPayment(models.Model):
