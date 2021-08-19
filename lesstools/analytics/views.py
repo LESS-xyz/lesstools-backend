@@ -139,22 +139,22 @@ def pair_vote(request):
     user_filter = AdvUser.objects.filter(username__iexact=user_address)
     if not user_filter.exists():
         return Response(f'No user {user_address} record in the database', status=status.HTTP_403_FORBIDDEN)
-    else:
-        pair_filter = Pair.objects.filter(address=pair_address, platform=platform)
-        if not pair_filter.exists():
-            return Response(f'No pair {pair_address} record in the database', status=status.HTTP_404_NOT_FOUND)
-        else:
-            user = user_filter.first()
-            pair = pair_filter.first()
-            user_pair_vote, created = UserPairVote.objects.get_or_create(user__username__iexact=user_address,
-                                                                         pair__address__iexact=pair_address,
-                                                                         defaults={'user': user,
-                                                                                   'pair': pair})
-            if created:
-                user_pair_vote.vote = vote
-                user_pair_vote.save()
-            else:
-                user_pair_vote.vote = UserPairVote.NEUTRAL if user_pair_vote.vote == vote else vote
-                user_pair_vote.save()
 
-            return Response(UserPairVoteSerializer(user_pair_vote, context={'username': user_address}).data)
+    pair_filter = Pair.objects.filter(address=pair_address, platform=platform)
+    if not pair_filter.exists():
+        return Response(f'No pair {pair_address} record in the database', status=status.HTTP_404_NOT_FOUND)
+
+    user = user_filter.first()
+    pair = pair_filter.first()
+    user_pair_vote, created = UserPairVote.objects.get_or_create(user__username__iexact=user_address,
+                                                                 pair__address__iexact=pair_address,
+                                                                 defaults={'user': user,
+                                                                           'pair': pair})
+    if created:
+        user_pair_vote.vote = vote
+        user_pair_vote.save()
+    else:
+        user_pair_vote.vote = UserPairVote.NEUTRAL if user_pair_vote.vote == vote else vote
+        user_pair_vote.save()
+
+    return Response(UserPairVoteSerializer(user_pair_vote, context={'username': user_address}).data)

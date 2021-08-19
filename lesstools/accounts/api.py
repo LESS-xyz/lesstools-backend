@@ -71,7 +71,8 @@ def plan_price(request):
                           enum=['ETH', 'BSC', 'POLYGON'])
     ],
     responses={'200': serializers.ListSerializer(child=serializers.CharField(max_length=50)),
-               '403': 'Unsupported user type for this operation'}
+               '403': 'Invalid authentication (no such user in the DB)',
+               '406': 'Unsupported user type for this operation'}
 )
 @api_view(http_method_names=['GET'])
 @permission_classes([IsAuthenticated])
@@ -80,15 +81,14 @@ def get_favourite_pairs(request, platform='ETH'):
         username = Web3.toChecksumAddress(request.user.username)
     # if it's a user without hex-string username (e.g. admins)
     except ValueError:
-        # for testing purposes let admins have favourite pairs
-        user_filter = AdvUser.objects.filter(username__iexact=request.user.username)
-        if user_filter.exists() and user_filter.first().is_staff:
-            username = request.user.username
-        else:
-            print(f'unsupported type of user is retrieving favourite pairs ({request.user} in this case)')
-            return Response('Unsupported user type for this operation', status=status.HTTP_403_FORBIDDEN)
+        print(f'unsupported type of user is retrieving favourite pairs ({request.user} in this case)')
+        return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    user = AdvUser.objects.filter(username__iexact=username).first()
+    user_filter = AdvUser.objects.filter(username__iexact=username)
+    if not user_filter.exists():
+        return Response(f'No user {username} record in the database', status=status.HTTP_403_FORBIDDEN)
+
+    user = user_filter.first()
     platform = platform.upper()
 
     favourite_pairs = []
@@ -113,8 +113,9 @@ def get_favourite_pairs(request, platform='ETH'):
     ),
     responses={'200': 'True if pair is now favourite, False otherwise',
                '207': 'Favourite pairs count limit exceeded for the user',
-               '403': 'Unsupported user type for this operation',
-               '404': 'No such pair in the DB'}
+               '403': 'Invalid authentication (no such user in the DB)',
+               '404': 'No such pair in the DB',
+               '406': 'Unsupported user type for this operation'}
 )
 @api_view(http_method_names=['POST'])
 @permission_classes([IsAuthenticated])
@@ -123,15 +124,14 @@ def add_or_remove_favourite_pair(request):
         username = Web3.toChecksumAddress(request.user.username)
     # if it's a user without hex-string username (e.g. admins)
     except ValueError:
-        # for testing purposes let admins have favourite pairs
-        user_filter = AdvUser.objects.filter(username__iexact=request.user.username)
-        if user_filter.exists() and user_filter.first().is_staff:
-            username = request.user.username
-        else:
-            print(f'unsupported type of user is trying to add/remove favourite pairs ({request.user} in this case)')
-            return Response('Unsupported user type for this operation', status=status.HTTP_403_FORBIDDEN)
+        print(f'unsupported type of user is trying to add/remove favourite pairs ({request.user} in this case)')
+        return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    user = AdvUser.objects.filter(username__iexact=username).first()
+    user_filter = AdvUser.objects.filter(username__iexact=username)
+    if not user_filter.exists():
+        return Response(f'No user {username} record in the database', status=status.HTTP_403_FORBIDDEN)
+
+    user = user_filter.first()
 
     pair_address = Web3.toChecksumAddress(request.data['pair_address'])
     platform = request.data['platform'].upper()
@@ -139,16 +139,16 @@ def add_or_remove_favourite_pair(request):
     pair_filter = Pair.objects.filter(address=pair_address, platform=platform)
     if not pair_filter.exists():
         return Response(f'No pair {pair_address} record in the database', status=status.HTTP_404_NOT_FOUND)
+
+    pair = pair_filter.first()
+    if user.favourite_pairs.filter(address=pair_address, platform=platform).exists():
+        user.favourite_pairs.remove(pair)
+        return Response(False, status=status.HTTP_200_OK)
+    if user.plan == AdvUser.Plans.FREE and user.favourite_pairs.all().count() < FAVOURITE_PAIRS_LIMIT:
+        user.favourite_pairs.add(pair)
+        return Response(True, status=status.HTTP_200_OK)
     else:
-        pair = pair_filter.first()
-        if user.favourite_pairs.filter(address=pair_address, platform=platform).exists():
-            user.favourite_pairs.remove(pair)
-            return Response(False, status=status.HTTP_200_OK)
-        if user.plan == AdvUser.Plans.FREE and user.favourite_pairs.all().count() < FAVOURITE_PAIRS_LIMIT:
-            user.favourite_pairs.add(pair)
-            return Response(True, status=status.HTTP_200_OK)
-        else:
-            return Response(f'Favourite pairs count limit exceeded for the user. Current plan: {user.plan}.'
-                            f' Limit of {FAVOURITE_PAIRS_LIMIT} for user {user.username} is reached',
-                            status=status.HTTP_207_MULTI_STATUS)
+        return Response(f'Favourite pairs count limit exceeded for the user. Current plan: {user.plan}.'
+                        f' Limit of {FAVOURITE_PAIRS_LIMIT} for user {user.username} is reached',
+                        status=status.HTTP_207_MULTI_STATUS)
 

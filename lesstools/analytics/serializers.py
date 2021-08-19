@@ -31,7 +31,10 @@ class PairSerializer(serializers.ModelSerializer):
     # check is current pair is favourite for the current user
     def _is_favourite(self, obj):
         username = self.context.get('username')
-        return obj.favourite_of.filter(username__iexact=username).exists()
+        if username is not None:
+            return obj.favourite_of.filter(username__iexact=username).exists()
+        else:
+            return False
 
 
 class UserPairVoteSerializer(serializers.ModelSerializer):
