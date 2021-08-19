@@ -32,15 +32,17 @@ def process_native_txs(native_txs, network):
             )
             payment.get_end_time()
             price = PlanPrice.objects.all().first().values('price')
-            if tx['value'] == price:
-                if user.plan == AdvUser.plans.FREE:
-                    user.plan = AdvUser.plans.STANDART
-                elif user.plan == AdvUser.plans.STANDART:
-                    user.plan = AdvUser.plans.PREMIUM
-            elif tx['value'] == 2 * price and user.plan == AdvUser.plans.FREE:
-                user.plan == AdvUser.plans.PREMIUM
+            # allow at least 1% difference if less and 5% if more
+            # todo change type to decimal?
+            if float(price) * 0.99 <= tx['value'] <= float(price) * 1.03:
+                if user.plan == AdvUser.Plans.FREE:
+                    user.plan = AdvUser.Plans.STANDART
+                elif user.plan == AdvUser.Plans.STANDART:
+                    user.plan = AdvUser.Plans.PREMIUM
+            elif float(2 * price) * 0.99 <= tx['value'] <= float(2 * price) * 1.03 and user.plan == AdvUser.Plans.FREE:
+                user.plan = AdvUser.Plans.PREMIUM
             else:
-                logging.error(f"{tx['value']} not enough for change plan, you need {price} or {2 * price}")
+                logging.error(f"{tx['value']} not enough for changing the plan, you need {price} or {2 * price}")
             user.save()
             logging.info(f"{user} is change plan successful")
         logging.info(native_txs['result'][0])
@@ -76,13 +78,14 @@ def process_token_txs(token_txs):
             )
             payment.get_end_time()
             price = PlanPrice.objects.all().first().values('price')
+            # todo allow at least 1% difference if less and 5% if more
             if tx['value'] == price:
-                if user.plan == AdvUser.plans.FREE:
-                    user.plan = AdvUser.plans.STANDART
-                elif user.plan == AdvUser.plans.STANDART:
-                    user.plan = AdvUser.plans.PREMIUM
-            elif tx['value'] == 2*price and user.plan == AdvUser.plans.FREE:
-                user.plan == AdvUser.plans.PREMIUM
+                if user.plan == AdvUser.Plans.FREE:
+                    user.plan = AdvUser.Plans.STANDART
+                elif user.plan == AdvUser.Plans.STANDART:
+                    user.plan = AdvUser.Plans.PREMIUM
+            elif tx['value'] == 2 * price and user.plan == AdvUser.Plans.FREE:
+                user.plan = AdvUser.Plans.PREMIUM
             else:
                 logging.error(f"{tx['value']} not enough for change plan, you need {price} or {2*price}")
             user.save()
