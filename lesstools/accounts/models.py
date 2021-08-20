@@ -8,9 +8,9 @@ from lesstools.consts import MAX_DIGITS
 class PlanPrice(models.Model):
     """PlanPayment price. Free->Premium=2x price"""
     price = models.PositiveSmallIntegerField(blank=False, help_text='You should have only one price record,'
-                                                                    ' and should not delete it.'
+                                                                    ' and should not delete it.\n'
                                                                     'It is Standard plan price.'
-                                                                    'Premium is assumed to be 2x bigger')
+                                                                    ' Premium is assumed to be 2x more expensive.')
 
 
 class AdvUser(AbstractUser):
