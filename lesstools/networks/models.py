@@ -4,7 +4,7 @@ from web3.middleware import geth_poa_middleware
 
 
 class Network(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     endpoint = models.CharField(max_length=200)
     last_processed_block = models.IntegerField(default=1)
     needs_poa_middleware = models.BooleanField(default=False)

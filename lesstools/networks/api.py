@@ -11,7 +11,6 @@ import logging
 def process_native_txs(native_txs, network):
     if native_txs.get('status') == '1':
         for tx in native_txs.get('result'):
-            logging.info(tx)
             if tx['to'].lower() != settings.PAYMENT_ADDRESS.lower() or tx['to'] == tx['from']:
                 logging.info(f"{tx.get('hash')}: found outcoming tx or loop tx, skipping")
                 continue
@@ -22,30 +21,32 @@ def process_native_txs(native_txs, network):
             if PlanPayment.objects.filter(tx_hash=tx['hash']).exists():
                 logging.info(f"{tx.get('hash')}: tx_hash already processed, skipping")
                 continue
-            rate_object = UsdRate.objects.get(currency=network.name).rate
-            usd_amount = calculate_amount(tx['value'], rate_object)
+
+            logging.info(tx)
+            rate_object = UsdRate.objects.get(currency=network.name).currency
+            usd_amount, _ = calculate_amount(tx['value'], rate_object)
             # TODO compare usd_amount with plan prices
             logging.info(f'usd_amount: {usd_amount}')
             payment = PlanPayment.objects.create(
                 user=user, payment_time=timezone.now(), tx_hash=tx['hash'],
-                amount=tx['value'], currency=tx['tokenSymbol']
+                amount=tx['value'], currency=network.name
             )
             payment.get_end_time()
-            price = PlanPrice.objects.all().first().values('price')
+            price = PlanPrice.objects.all().first().price
             # allow at least 1% difference if less and 5% if more
             # todo change type to decimal?
-            if float(price) * 0.99 <= tx['value'] <= float(price) * 1.03:
+            if float(price) * 0.99 <= usd_amount <= float(price) * 1.05:
                 if user.plan == AdvUser.Plans.FREE:
-                    user.plan = AdvUser.Plans.STANDART
-                elif user.plan == AdvUser.Plans.STANDART:
+                    user.plan = AdvUser.Plans.STANDARD
+                elif user.plan == AdvUser.Plans.STANDARD:
                     user.plan = AdvUser.Plans.PREMIUM
-            elif float(2 * price) * 0.99 <= tx['value'] <= float(2 * price) * 1.03 and user.plan == AdvUser.Plans.FREE:
+            elif float(2 * price) * 0.99 <= usd_amount <= float(2 * price) * 1.05 and user.plan == AdvUser.Plans.FREE:
                 user.plan = AdvUser.Plans.PREMIUM
             else:
-                logging.error(f"{tx['value']} not enough for changing the plan, you need {price} or {2 * price}")
+                logging.error(f"{usd_amount} not acceptable for changing the plan, {price} or {2 * price} is needed")
+                continue
             user.save()
-            logging.info(f"{user} is change plan successful")
-        logging.info(native_txs['result'][0])
+            logging.info(f"{user} has changed plan successfully")
     else:
         print('no new native txs')
 
@@ -53,7 +54,6 @@ def process_native_txs(native_txs, network):
 def process_token_txs(token_txs):
     if token_txs.get('status') == '1':
         for tx in token_txs.get('result'):
-            logging.info(tx)
             # Check and exclude not valid txs
             if tx['to'].lower() != settings.PAYMENT_ADDRESS.lower() or tx['to'] == tx['from']:
                 logging.info(f"{tx.get('hash')}: found outcoming tx or loop tx, skipping")
@@ -69,7 +69,9 @@ def process_token_txs(token_txs):
             if PlanPayment.objects.filter(tx_hash=tx['hash']).exists():
                 logging.info(f"{tx.get('hash')}: tx_hash already processed, skipping")
                 continue
-            usd_amount = calculate_amount(tx['value'], accepted_coin.rate.currency)
+
+            logging.info(tx)
+            usd_amount, _ = calculate_amount(tx['value'], accepted_coin.rate.currency)
             # TODO compare usd_amount with plan prices
             logging.info(f'usd_amount: {usd_amount}')
             payment = PlanPayment.objects.create(
@@ -77,19 +79,20 @@ def process_token_txs(token_txs):
                 amount=tx['value'], currency=tx['tokenSymbol']
             )
             payment.get_end_time()
-            price = PlanPrice.objects.all().first().values('price')
+            price = PlanPrice.objects.all().first().price
             # todo allow at least 1% difference if less and 5% if more
-            if tx['value'] == price:
+            if usd_amount == price:
                 if user.plan == AdvUser.Plans.FREE:
-                    user.plan = AdvUser.Plans.STANDART
-                elif user.plan == AdvUser.Plans.STANDART:
+                    user.plan = AdvUser.Plans.STANDARD
+                elif user.plan == AdvUser.Plans.STANDARD:
                     user.plan = AdvUser.Plans.PREMIUM
-            elif tx['value'] == 2 * price and user.plan == AdvUser.Plans.FREE:
+            elif usd_amount == 2 * price and user.plan == AdvUser.Plans.FREE:
                 user.plan = AdvUser.Plans.PREMIUM
             else:
-                logging.error(f"{tx['value']} not enough for change plan, you need {price} or {2*price}")
+                logging.error(f"{usd_amount} not acceptable for changing the plan, {price} or {2*price} is needed")
+                continue
             user.save()
-            logging.info(f"{user} is change plan successful")
+            logging.info(f"{user} has changed plan successfully")
 
     else:
         logging.info('no new token txs')
