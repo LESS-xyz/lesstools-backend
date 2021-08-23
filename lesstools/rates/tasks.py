@@ -4,13 +4,14 @@ import json
 import requests
 import traceback
 
+from lesstools.networks.models import PaymentToken
 from lesstools.rates.models import UsdRate
-from lesstools.settings import QUERY_TSYMS, QUERY_FSYM, API_URL
+from lesstools.settings import COINGECKO_QUERY_FSYM, COINGECKO_API_URL
 import logging
 
 
 def get_rates(fsym, tsym, reverse=False):
-    res = requests.get(API_URL.format(coin_code=tsym))
+    res = requests.get(COINGECKO_API_URL.format(coin_code=tsym))
     if res.status_code != 200:
         raise Exception('cannot get exchange rate for {}'.format(fsym))
     answer = json.loads(res.text)
@@ -25,8 +26,8 @@ def update_rates():
     usd_prices = {}
 
     try:
-        for tsym, tsym_code in QUERY_TSYMS.items():
-            usd_prices[tsym] = get_rates(QUERY_FSYM, tsym_code, reverse=True)
+        for token in PaymentToken.objects.all():
+            usd_prices[token.currency] = get_rates(COINGECKO_QUERY_FSYM, token.coingecko_code, reverse=True)
     except Exception as e:
         logging.error('\n'.join(traceback.format_exception(*sys.exc_info())))
         return

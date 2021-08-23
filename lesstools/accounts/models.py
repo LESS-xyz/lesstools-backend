@@ -30,7 +30,7 @@ class PlanPayment(models.Model):
     end_time = models.DateTimeField(null=True)
     tx_hash = models.CharField(max_length=128)
     amount = models.DecimalField(max_digits=MAX_DIGITS, decimal_places=0)
-    currency = models.CharField(max_length=100)
+    token_used = models.ForeignKey('networks.PaymentToken', null=True, blank=True, on_delete=models.SET_NULL)
 
     def get_end_time(self):
         self.end_time = self.payment_time + timedelta(days=30)
