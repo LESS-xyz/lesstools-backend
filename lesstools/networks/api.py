@@ -3,7 +3,6 @@ from django.conf import settings
 from lesstools.networks.models import PaymentToken
 from lesstools.accounts.models import AdvUser, PlanPayment
 from lesstools.rates.api import calculate_amount
-from lesstools.rates.models import UsdRate
 from lesstools.accounts.models import PlanPrice
 import logging
 
@@ -47,7 +46,6 @@ def process_native_txs(native_txs, network):
             payment.get_end_time()
             price = PlanPrice.objects.all().first().price
             # allow at least 1% difference if less and 5% if more
-            # todo change type to decimal?
             if float(price) * 0.99 <= usd_amount <= float(price) * 1.05:
                 if user.plan == AdvUser.Plans.FREE:
                     user.plan = AdvUser.Plans.STANDARD

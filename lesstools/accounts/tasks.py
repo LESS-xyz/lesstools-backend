@@ -9,6 +9,7 @@ def check_paid():
     logging.info('starting paid check')
     for user in AdvUser.objects.exclude(plan=AdvUser.Plans.FREE):
         # for every user with active plan check if payment end time is expired and downgrade him
+        # todo check if there're another payments from him and probably downgrade by one tier below, not FREE right away
         if not user.payments.filter(end_time__gte=timezone.now()):
             user.plan = AdvUser.Plans.FREE
             user.save()
