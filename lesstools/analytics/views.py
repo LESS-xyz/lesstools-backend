@@ -93,6 +93,10 @@ def pair_info_retrieval(request):
 
     if created:
         print(f'pair "{pair_info.address}" on {pair_info.platform} platform saved to the database')
+    else:
+        # if analytics are requested for another token in this pair
+        pair_info.token_being_reviewed = token_info
+        pair_info.save()
 
     if user_address is not None:
         user_pair_vote_filter = UserPairVote.objects.filter(user__username__iexact=user_address,
