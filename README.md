@@ -1,6 +1,6 @@
 for populating database with base token and network entities run
 ```shell
-manage.py loaddata lesstools/fixtures/base_payment_entities
+manage.py loaddata lesstools/fixtures/base_payment_entities.json
 ```
 after applying migrations
 
