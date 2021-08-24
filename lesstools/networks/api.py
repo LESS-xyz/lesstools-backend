@@ -25,6 +25,39 @@ def is_applicable(tx, is_token_tx: bool = False):
     return True
 
 
+def apply_payment(tx, network=None):
+    logging.info(tx)
+
+    user = AdvUser.objects.filter(username=tx['from']).first()
+    token = PaymentToken.objects.filter(address__iexact=tx['contractAddress']).first() \
+        if network is None else network.native_token
+    usd_amount, _ = calculate_amount(tx['value'], token.currency)
+
+    logging.info(f'usd_amount: {usd_amount}')
+    payment = PlanPayment.objects.create(
+        user=user, payment_time=timezone.now(), tx_hash=tx['hash'],
+        amount=tx['value'], token_used=token
+    )
+
+    price = PlanPrice.objects.all().first().price
+    # allow at least 5% difference due to the volatile rates
+    if float(price) * 0.95 <= usd_amount <= float(price) * 1.05:
+        if user.plan == AdvUser.Plans.FREE:
+            user.plan = AdvUser.Plans.STANDARD
+        elif user.plan == AdvUser.Plans.STANDARD:
+            user.plan = AdvUser.Plans.PREMIUM
+    elif float(2 * price) * 0.95 <= usd_amount <= float(2 * price) * 1.05 and user.plan == AdvUser.Plans.FREE:
+        user.plan = AdvUser.Plans.PREMIUM
+    else:
+        payment.define_end_time(successful=False)
+        logging.error(f"{usd_amount} not acceptable for changing the plan, {price} or {2 * price} is needed")
+        return
+
+    user.save()
+    payment.define_end_time(successful=True)
+    logging.info(f"{user} has changed plan successfully")
+
+
 def process_native_txs(native_txs, network):
     if native_txs.get('status') == '1':
         for tx in native_txs.get('result'):
@@ -32,32 +65,7 @@ def process_native_txs(native_txs, network):
             if not is_applicable(tx):
                 continue
 
-            logging.info(tx)
-
-            user = AdvUser.objects.filter(username=tx['from']).first()
-
-            usd_amount, _ = calculate_amount(tx['value'], network.native_token.currency)
-
-            logging.info(f'usd_amount: {usd_amount}')
-            payment = PlanPayment.objects.create(
-                user=user, payment_time=timezone.now(), tx_hash=tx['hash'],
-                amount=tx['value'], token_used=network.native_token
-            )
-            payment.get_end_time()
-            price = PlanPrice.objects.all().first().price
-            # allow at least 1% difference if less and 5% if more
-            if float(price) * 0.99 <= usd_amount <= float(price) * 1.05:
-                if user.plan == AdvUser.Plans.FREE:
-                    user.plan = AdvUser.Plans.STANDARD
-                elif user.plan == AdvUser.Plans.STANDARD:
-                    user.plan = AdvUser.Plans.PREMIUM
-            elif float(2 * price) * 0.99 <= usd_amount <= float(2 * price) * 1.05 and user.plan == AdvUser.Plans.FREE:
-                user.plan = AdvUser.Plans.PREMIUM
-            else:
-                logging.error(f"{usd_amount} not acceptable for changing the plan, {price} or {2 * price} is needed")
-                continue
-            user.save()
-            logging.info(f"{user} has changed plan successfully")
+            apply_payment(tx, network)
     else:
         print('no new native txs')
 
@@ -69,33 +77,6 @@ def process_token_txs(token_txs):
             if not is_applicable(tx, is_token_tx=True):
                 continue
 
-            logging.info(tx)
-
-            user = AdvUser.objects.filter(username=tx['from']).first()
-            token = PaymentToken.objects.filter(address__iexact=tx['contractAddress']).first()
-            usd_amount, _ = calculate_amount(tx['value'], token.currency)
-
-            # TODO compare usd_amount with plan prices
-            logging.info(f'usd_amount: {usd_amount}')
-            payment = PlanPayment.objects.create(
-                user=user, payment_time=timezone.now(), tx_hash=tx['hash'],
-                amount=tx['value'], token_used=token
-            )
-            payment.get_end_time()
-            price = PlanPrice.objects.all().first().price
-            # todo allow at least 1% difference if less and 5% if more
-            if usd_amount == price:
-                if user.plan == AdvUser.Plans.FREE:
-                    user.plan = AdvUser.Plans.STANDARD
-                elif user.plan == AdvUser.Plans.STANDARD:
-                    user.plan = AdvUser.Plans.PREMIUM
-            elif usd_amount == 2 * price and user.plan == AdvUser.Plans.FREE:
-                user.plan = AdvUser.Plans.PREMIUM
-            else:
-                logging.error(f"{usd_amount} not acceptable for changing the plan, {price} or {2*price} is needed")
-                continue
-            user.save()
-            logging.info(f"{user} has changed plan successfully")
-
+            apply_payment(tx)
     else:
         logging.info('no new token txs')

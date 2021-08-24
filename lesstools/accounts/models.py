@@ -27,11 +27,13 @@ class AdvUser(AbstractUser):
 class PlanPayment(models.Model):
     user = models.ForeignKey(AdvUser, on_delete=models.CASCADE, related_name='payments')
     payment_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True,
+                                    help_text='If end time equals payment time - the payment was unsuccessful '
+                                              'and user did not upgrade')
     tx_hash = models.CharField(max_length=128)
     amount = models.DecimalField(max_digits=MAX_DIGITS, decimal_places=0)
     token_used = models.ForeignKey('networks.PaymentToken', null=True, blank=True, on_delete=models.SET_NULL)
 
-    def get_end_time(self):
-        self.end_time = self.payment_time + timedelta(days=30)
+    def define_end_time(self, successful: bool):
+        self.end_time = self.payment_time + timedelta(days=30) if successful else self.payment_time
         self.save()

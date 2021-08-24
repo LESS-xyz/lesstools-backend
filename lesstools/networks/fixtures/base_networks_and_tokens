@@ -3,6 +3,19 @@
       "model":"networks.network",
       "pk":1,
       "fields":{
+         "name":"ethereum",
+         "endpoint":"https://mainnet.infura.io/v3/78ca6527b48a4236aa6923912b239e5c",
+         "last_processed_block":13087991,
+         "needs_poa_middleware":false,
+         "native_api_url":"https://api.etherscan.io/api?module=account&action=txlist&address={address}&startblock={startblock}&endblock={endblock}&sort=asc&",
+         "token_api_url":"https://api.etherscan.io/api?module=account&action=tokentx&address={address}&startblock={startblock}&endblock={endblock}&sort=asc&",
+         "native_token":2
+      }
+   },
+   {
+      "model":"networks.network",
+      "pk":2,
+      "fields":{
          "name":"binance-smart-chain",
          "endpoint":"https://data-seed-prebsc-2-s1.binance.org:8545/",
          "last_processed_block":11733199,
@@ -40,7 +53,7 @@
       "model":"networks.paymenttoken",
       "pk":3,
       "fields":{
-         "network":1,
+         "network":2,
          "address":"0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
          "currency":"binance-smart-chain",
          "coingecko_code":"wbnb",
@@ -52,7 +65,7 @@
       "model":"networks.paymenttoken",
       "pk":4,
       "fields":{
-         "network":null,
+         "network":1,
          "address":"0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
          "currency":"WBNB",
          "coingecko_code":"wbnb",
