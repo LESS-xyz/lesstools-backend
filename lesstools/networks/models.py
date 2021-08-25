@@ -1,5 +1,5 @@
 from web3 import Web3
-from django.db import models
+from django.db import models, IntegrityError
 from web3.middleware import geth_poa_middleware
 
 from lesstools.rates.models import UsdRate
@@ -18,7 +18,16 @@ class Network(models.Model):
     native_token = models.ForeignKey('PaymentToken', on_delete=models.RESTRICT, related_name='NOT_NEEDED+')
 
     allows_holding_for_paid_plans = models.BooleanField(default=False)
-    less_token_address = models.CharField(max_length=128)
+    less_token_address = models.CharField(max_length=128, null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(models.Q(allows_holding_for_paid_plans=True) &
+                       models.Q(less_token_address__isnull=False)) | models.Q(allows_holding_for_paid_plans=False),
+                name='if_allows_holding_less_token_address_not_null'
+            )
+        ]
 
     def get_web3_connection(self):
         web3 = Web3(Web3.HTTPProvider(self.endpoint))
