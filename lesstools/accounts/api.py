@@ -56,7 +56,8 @@ def generate_metamask_message(request):
 def plan_price(request):
     """Plan price"""
     price = PlanPrice.objects.all().first()
-    return Response(price.price)
+    return Response({'monthly_price': price.monthly_price_in_usd,
+                     'holding_amount': price.holding_amount_in_less})
 
 
 @swagger_auto_schema(

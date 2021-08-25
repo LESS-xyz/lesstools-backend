@@ -39,7 +39,7 @@ def apply_payment(tx, network=None):
         amount=tx['value'], token_used=token
     )
 
-    price = PlanPrice.objects.all().first().price
+    price = PlanPrice.objects.all().first().monthly_price_in_usd
     # allow at least 5% difference due to the volatile rates
     if float(price) * 0.95 <= usd_amount <= float(price) * 1.05:
         if user.plan == AdvUser.Plans.FREE:

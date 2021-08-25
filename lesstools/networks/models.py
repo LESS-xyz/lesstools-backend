@@ -6,6 +6,8 @@ from lesstools.rates.models import UsdRate
 
 
 class Network(models.Model):
+    LESS_TOKEN_DECIMALS = 10 ** 18
+
     name = models.CharField(max_length=100)
     endpoint = models.CharField(max_length=200)
     last_processed_block = models.IntegerField(default=1)
@@ -14,6 +16,9 @@ class Network(models.Model):
     token_api_url = models.CharField(max_length=400)
 
     native_token = models.ForeignKey('PaymentToken', on_delete=models.RESTRICT, related_name='NOT_NEEDED+')
+
+    allows_holding_for_paid_plans = models.BooleanField(default=False)
+    less_token_address = models.CharField(max_length=128)
 
     def get_web3_connection(self):
         web3 = Web3(Web3.HTTPProvider(self.endpoint))

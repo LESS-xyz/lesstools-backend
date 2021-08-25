@@ -6,11 +6,16 @@ from lesstools.consts import MAX_DIGITS
 
 
 class PlanPrice(models.Model):
-    """PlanPayment price. Free->Premium=2x price"""
-    price = models.PositiveSmallIntegerField(blank=False, help_text='You should have only one price record,'
-                                                                    ' and should not delete it.\n'
-                                                                    'It is Standard plan price.'
-                                                                    ' Premium is assumed to be 2x more expensive.')
+    """Plan payment price and holding amount"""
+    monthly_price_in_usd = models.PositiveSmallIntegerField(help_text='You should have only one price record for payments,'
+                                                               ' and should not delete it.\n'
+                                                               'It is Standard plan price.'
+                                                               ' Premium is assumed to be 2x more expensive.')
+
+    holding_amount_in_less = models.PositiveIntegerField(help_text='You should have only one amount record for holding,'
+                                                           ' and should not delete it.\n'
+                                                           'It is holding amount for Standard plan.'
+                                                           ' Premium is assumed to be 2x bigger.')
 
 
 class AdvUser(AbstractUser):
