@@ -43,9 +43,3 @@ class UserPairVoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserPairVote
         fields = ('pair', 'vote')
-
-
-# for visible union of possible responses
-class ResponseUnionExampleSerializer(serializers.Serializer):
-    pair_serializer = PairSerializer(many=True, required=False)
-    user_pair_vote_serializer = UserPairVoteSerializer(many=True, required=False)

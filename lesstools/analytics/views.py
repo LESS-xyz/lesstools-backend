@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from lesstools.accounts.models import AdvUser
 from lesstools.analytics.models import Pair, UserPairVote
-from lesstools.analytics.serializers import PairSerializer, UserPairVoteSerializer, ResponseUnionExampleSerializer
+from lesstools.analytics.serializers import PairSerializer, UserPairVoteSerializer
 
 from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed
 
@@ -47,8 +47,7 @@ def manual_cmc_mapping_update(request):
 @swagger_auto_schema(
     method='post',
     operation_description="Retrieve additional pair info.\n"
-                          "If response body has 'vote' field then there is info about the vote of the current user.\n"
-                          "If there is no such field - the format of response is different: pair info is not nested.",
+                          "Field 'vote' can be 0 in both cases of a neutral vote or unauthorized retrieval",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -60,7 +59,7 @@ def manual_cmc_mapping_update(request):
         },
         required=['pair_address', 'token_address', 'token_name', 'token_symbol', 'platform']
     ),
-    responses={'200': ResponseUnionExampleSerializer()}
+    responses={'200': UserPairVoteSerializer()}
 )
 @api_view(http_method_names=['POST'])
 def pair_info_retrieval(request):
@@ -105,7 +104,9 @@ def pair_info_retrieval(request):
             return Response(UserPairVoteSerializer(user_pair_vote_filter.first(),
                                                    context={'username': user_address}).data)
 
-    return Response(PairSerializer(pair_info, context={'username': user_address}).data)
+    # for the uniformity of the server response
+    return Response({'pair': PairSerializer(pair_info, context={'username': user_address}).data,
+                     'vote': 0})
 
 
 @swagger_auto_schema(
