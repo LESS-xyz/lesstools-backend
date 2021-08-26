@@ -19,7 +19,7 @@ class NetworkForm(forms.ModelForm):
                 raise forms.ValidationError("LESS token address can't be empty if holding is allowed")
             else:
                 try:
-                    less_token_address = Web3.toChecksumAddress(less_token_address)
+                    Web3.toChecksumAddress(less_token_address)
                 except ValueError:
                     raise forms.ValidationError("Provided address is not a valid hex string")
 
