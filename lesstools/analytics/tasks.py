@@ -1,12 +1,14 @@
+import logging
+
 import dramatiq
 from .api import mapping_update
 
 
 @dramatiq.actor(max_retries=0)
 def periodic_cmc_mapping_update():
-    print('starting CoinMarketCap mapping update')
+    logging.info('starting CoinMarketCap mapping update')
     mapping_update()
-    print('ending CoinMarketCap mapping update')
+    logging.info('ending CoinMarketCap mapping update')
 
 
 #  todo move to signals when implementing new pairs tgbot (it's just an example from Semyon)

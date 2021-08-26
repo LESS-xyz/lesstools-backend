@@ -67,7 +67,7 @@ def process_native_txs(native_txs, network):
 
             apply_payment(tx, network)
     else:
-        print('no new native txs')
+        logging.info('no new native txs')
 
 
 def process_token_txs(token_txs):

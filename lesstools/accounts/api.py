@@ -82,7 +82,7 @@ def get_favourite_pairs(request, platform='ETH'):
         username = Web3.toChecksumAddress(request.user.username)
     # if it's a user without hex-string username (e.g. admins)
     except ValueError:
-        print(f'unsupported type of user is retrieving favourite pairs ({request.user} in this case)')
+        logging.error(f'unsupported type of user is retrieving favourite pairs ({request.user} in this case)')
         return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
 
     user_filter = AdvUser.objects.filter(username__iexact=username)
@@ -125,7 +125,7 @@ def add_or_remove_favourite_pair(request):
         username = Web3.toChecksumAddress(request.user.username)
     # if it's a user without hex-string username (e.g. admins)
     except ValueError:
-        print(f'unsupported type of user is trying to add/remove favourite pairs ({request.user} in this case)')
+        logging.error(f'unsupported type of user is trying to add/remove favourite pairs ({request.user} in this case)')
         return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
 
     user_filter = AdvUser.objects.filter(username__iexact=username)

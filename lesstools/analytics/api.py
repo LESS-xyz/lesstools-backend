@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 from web3 import Web3
@@ -14,7 +16,7 @@ def mapping_update(run_full_update=False):
     if cmc_request.status_code == 200:
         data = cmc_request.json()['data']
     else:
-        print('error on CMC data retrieval')
+        logging.error('error on CMC data retrieval')
         raise RuntimeError()
 
     paginate_from = 1
@@ -62,7 +64,7 @@ def mapping_update(run_full_update=False):
         if cmc_request.status_code == 200:
             data = cmc_request.json()['data']
         else:
-            print('error on CMC data retrieval')
+            logging.error('error on CMC data retrieval')
             raise RuntimeError()
 
 
@@ -73,7 +75,7 @@ def try_extend_if_needed(token: Token, platform: str):
         if ethplorer_request.status_code == 200:
             data = ethplorer_request.json()
         else:
-            print('error on Ethplorer data retrieval')
+            logging.error('error on Ethplorer data retrieval')
             return token
 
         if token.price_in_usd is None or token.price_in_usd == 0:
@@ -102,7 +104,7 @@ def info_from_ethplorer(token_address):
     if ethplorer_request.status_code == 200:
         data = ethplorer_request.json()
     else:
-        print('error on Ethplorer data retrieval')
+        logging.error('error on Ethplorer data retrieval')
         return None
 
     token, created = Token.objects.update_or_create(eth_address=token_address, defaults={
@@ -117,7 +119,7 @@ def info_from_ethplorer(token_address):
     })
 
     if created:
-        print(f'token "{token.symbol}" saved to the database')
+        logging.info(f'token "{token.symbol}" saved to the database')
 
     return token
 
@@ -143,7 +145,7 @@ def info_from_cmc(token_address, token_name, token_symbol, platform):
     if cmc_request.status_code == 200:
         data = cmc_request.json()['data']
     else:
-        print('error on CMC data retrieval')
+        logging.error('error on CMC data retrieval')
         return None
 
     if 'platforms' in data:

@@ -1,3 +1,5 @@
+import logging
+
 from web3 import Web3
 
 from drf_yasg import openapi
@@ -67,7 +69,7 @@ def pair_info_retrieval(request):
         user_address = Web3.toChecksumAddress(request.user.username)
     # if it's anonymous user or the one without hex-string username (e.g. admins)
     except ValueError:
-        print(f'not authenticated or admin user is retrieving information ({request.user} in this case)')
+        logging.info(f'not authenticated or admin user is retrieving information ({request.user} in this case)')
         user_address = None
 
     pair_address = Web3.toChecksumAddress(request.data['pair_address'])
@@ -83,7 +85,7 @@ def pair_info_retrieval(request):
     elif platform == 'ETH':
         token_info = info_from_ethplorer(token_address)
     else:
-        print('No information is available for specified token')
+        logging.info('No information is available for specified token')
         token_info = None
 
     pair_info, created = Pair.objects.get_or_create(address=pair_address,
@@ -91,7 +93,7 @@ def pair_info_retrieval(request):
                                                     defaults={'token_being_reviewed': token_info})
 
     if created:
-        print(f'pair "{pair_info.address}" on {pair_info.platform} platform saved to the database')
+        logging.info(f'pair "{pair_info.address}" on {pair_info.platform} platform saved to the database')
     else:
         # if analytics are requested for another token in this pair
         pair_info.token_being_reviewed = token_info
@@ -134,7 +136,7 @@ def pair_vote(request):
         user_address = Web3.toChecksumAddress(request.user.username)
     # if it's a user without hex-string username (e.g. admins)
     except ValueError:
-        print(f'unsupported type of user is trying to vote ({request.user} in this case)')
+        logging.error(f'unsupported type of user is trying to vote ({request.user} in this case)')
         return Response('Unsupported user type for this operation', status=status.HTTP_406_NOT_ACCEPTABLE)
 
     pair_address = Web3.toChecksumAddress(request.data['pair_address'])
