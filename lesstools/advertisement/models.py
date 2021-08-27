@@ -24,32 +24,36 @@ class ADV(models.Model):
     BOT = 'BOT'
     POS = (
         (TOP, 'top'),
-        (MID, 'mid'),
-        (BOT, 'bot'),
+        (MID, 'middle'),
+        (BOT, 'bottom'),
     )
     
     SIZE_TOP = [1100, 87]
     SIZE_MID = [72, 72]
     SIZE_BOT = [353, 105]
     
-    name = models.CharField(max_length=32, blank=True, help_text='Company name (only for MID position)')
-    sub_name = models.CharField(max_length=32, blank=True, help_text='Company tag (only for MID position)')
-    icon = models.ImageField(upload_to='img-%Y-%m-%d/', help_text='image ('
-                                                                  f'for TOP position not less than {SIZE_TOP[0]}px/{SIZE_TOP[1]}px,\n'
-                                                                  f'for MID position not less than {SIZE_MID[0]}px/{SIZE_MID[1]}px,\n'
-                                                                  f'for BOT position not less than {SIZE_BOT[0]}px/{SIZE_BOT[1]}px)')
-    description = models.CharField(max_length=128, blank=True, help_text='Company description (only for MID position)')
-    position = models.CharField(max_length=3, choices=POS, help_text='max count for TOP=1, MID=3, BOT=3')
+    name = models.CharField(max_length=32, blank=True, help_text='Company name (only for middle position)')
+    sub_name = models.CharField(max_length=32, blank=True, help_text='Company tag (only for middle position)')
+    icon = models.ImageField(upload_to='img-%Y-%m-%d/',
+                             help_text=f'image (for top position not less than {SIZE_TOP[0]}px/{SIZE_TOP[1]}px,\n'
+                                       f'for middle position not less than {SIZE_MID[0]}px/{SIZE_MID[1]}px,\n'
+                                       f'for bottom position not less than {SIZE_BOT[0]}px/{SIZE_BOT[1]}px)')
+    description = models.CharField(max_length=128, blank=True,
+                                   help_text='Company description (only for middle position)')
+    position = models.CharField(max_length=3, choices=POS, help_text='max count for top=1, middle=3, bottom=3')
     hash = models.CharField(max_length=256, blank=True, help_text='Hash for ipfs')
 
     def save(self, *args, **kwargs):
-        if self.position == self.TOP and self.icon.width < self.SIZE_TOP[0] and self.icon.height < self.SIZE_TOP[1]:
-            raise ImgError(f'img width or height less than {self.SIZE_TOP[0]} or/and {self.SIZE_TOP[1]}')
-        elif self.position == self.MID and self.icon.width < self.SIZE_MID[0] and self.icon.height < self.SIZE_MID[1]\
-                or len(self.name) < 2 or len(self.sub_name) < 3 or len(self.description) < 10:
-            raise ImgError(f'img width or height less than {self.SIZE_MID} or name/sub_name/description too short')
-        elif self.position == self.BOT and self.icon.width < self.SIZE_BOT[0] and self.icon.height < self.SIZE_BOT[1]:
-            raise ImgError(f'img width or height less than {self.SIZE_BOT[0]} or/and {self.SIZE_BOT[1]}')
+        if self.position == self.TOP:
+            if not (self.icon.width >= self.SIZE_TOP[0] and self.icon.height >= self.SIZE_TOP[1]):
+                raise ImgError(f'img is smaller than {self.SIZE_TOP}')
+        elif self.position == self.MID:
+            if not (self.icon.width >= self.SIZE_MID[0] and self.icon.height >= self.SIZE_MID[1]
+                    and len(self.name) >= 2 and len(self.sub_name) >+ 3 and len(self.description) >= 10):
+                raise ImgError(f'img is smaller than {self.SIZE_MID} or name/sub_name/description is too short')
+        elif self.position == self.BOT:
+            if not (self.icon.width >= self.SIZE_BOT[0] and self.icon.height >= self.SIZE_BOT[1]):
+                raise ImgError(f'img is smaller than {self.SIZE_BOT}')
         super(ADV, self).save(*args, **kwargs)
 
     def get_ipfs_img(self):
