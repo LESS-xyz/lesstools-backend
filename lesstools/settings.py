@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'lesstools.networks',
     'lesstools.rates',
     'lesstools.analytics',
+    'lesstools.advertisement',
 ]
 
 MIDDLEWARE = [
@@ -179,6 +180,18 @@ CORS_ORIGIN_ALLOW_ALL = True
 USE_X_FORWARDED_HOST = True
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
+ADMIN_MEDIA_PREFIX = '/static/admin/'
+
 
 try:
     from lesstools.settings_local import *

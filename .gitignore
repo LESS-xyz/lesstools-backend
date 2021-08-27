@@ -53,8 +53,11 @@ coverage.xml
 
 # Django stuff:
 *.log
-local_settings.py
+settings_local.py
+#local_settings.py
 db.sqlite3
+media/
+static/
 
 # Flask stuff:
 instance/
@@ -107,7 +110,6 @@ venv.bak/
 .idea/
 *.iml
 gunicorn.conf.py
-settings_local.py
 /venv/
 /__pycache__/
 /*/__pycache__/

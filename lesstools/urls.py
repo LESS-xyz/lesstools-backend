@@ -18,6 +18,8 @@ from django.urls import path, include, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from django.conf import settings
+from django.conf.urls.static import static
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -38,5 +40,6 @@ urlpatterns = [
 
     path('django-admin/', admin.site.urls),
     path('api/v1/accounts/', include('lesstools.accounts.urls')),
-    path('api/v1/analytics/', include('lesstools.analytics.urls'))
-]
+    path('api/v1/analytics/', include('lesstools.analytics.urls')),
+    path('api/v1/advertisement/', include('lesstools.advertisement.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

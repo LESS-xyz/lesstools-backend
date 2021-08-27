@@ -25,6 +25,7 @@ services:
     volumes:
       - ./lesstools/:/code/lesstools/
       - ./static/:/code/static/
+      - ./media/:/code/media/
     networks:
       - main
   dramatiq:
