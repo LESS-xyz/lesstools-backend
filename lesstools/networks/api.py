@@ -44,10 +44,13 @@ def apply_payment(tx, network=None):
     if float(price) * 0.95 <= usd_amount <= float(price) * 1.05:
         if user.plan == AdvUser.Plans.FREE:
             user.plan = AdvUser.Plans.STANDARD
+            payment.grants_plan = AdvUser.Plans.STANDARD
         elif user.plan == AdvUser.Plans.STANDARD:
             user.plan = AdvUser.Plans.PREMIUM
-    elif float(2 * price) * 0.95 <= usd_amount <= float(2 * price) * 1.05 and user.plan == AdvUser.Plans.FREE:
+            payment.grants_plan = AdvUser.Plans.PREMIUM
+    elif float(2 * price) * 0.95 <= usd_amount <= float(2 * price) * 1.05:
         user.plan = AdvUser.Plans.PREMIUM
+        payment.grants_plan = AdvUser.Plans.PREMIUM
     else:
         payment.define_end_time(successful=False)
         logging.error(f"{usd_amount} not acceptable for changing the plan, {price} or {2 * price} is needed")

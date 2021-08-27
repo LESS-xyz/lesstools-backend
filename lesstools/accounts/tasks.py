@@ -1,12 +1,12 @@
 import dramatiq
 from django.utils import timezone
-from .models import AdvUser, PlanPrice
+from .models import AdvUser, PlanPrice, UserHolding
 import logging
 
 from web3 import Web3
 
 from lesstools.networks.models import Network
-from lesstools.abis.balance_of_LESS import ABI
+from lesstools.accounts.abis.balance_of_LESS import ABI
 
 
 @dramatiq.actor(max_retries=0)
@@ -14,17 +14,23 @@ def check_paid():
     logging.info('starting paid check')
 
     for user in AdvUser.objects.exclude(plan=AdvUser.Plans.FREE):
+        old_plan = user.plan
+
         # for every user with active plan check if payment end time has come and downgrade him
-        active_payments = user.payments.filter(end_time__gte=timezone.now()).count()
-        if active_payments == 0:
+        active_payments = user.payments.filter(end_time__gte=timezone.now())
+        if active_payments.count() == 0:
             user.plan = AdvUser.Plans.FREE
-        elif active_payments == 1:
-            user.plan = AdvUser.Plans.STANDARD
+        elif active_payments.count() == 1:
+            if active_payments.first().grants_plan == AdvUser.Plans.STANDARD:
+                user.plan = AdvUser.Plans.STANDARD
+            elif active_payments.first().grants_plan == AdvUser.Plans.PREMIUM:
+                user.plan = AdvUser.Plans.PREMIUM
         else:
             continue
 
         user.save()
-        logging.info(f'payment of {user.username} is expired, downgrading to {user.plan} plan')
+        if old_plan != user.plan:
+            logging.info(f'payment of {user.username} is expired, downgrading to {user.plan} plan')
 
     logging.info('ending paid check')
 
@@ -44,20 +50,36 @@ def check_hold():
             except ValueError:
                 continue
 
-            user_holding = less_token_contract.functions.balanceOf(user_address).call() // Network.LESS_TOKEN_DECIMALS
+            user_holding_amount = \
+                less_token_contract.functions.balanceOf(user_address).call() // Network.LESS_TOKEN_DECIMALS
+
+            user_holding, _ = UserHolding.objects.get_or_create(user=user, network=network)
+            user_holding.less_holding_amount = user_holding_amount
+            user_holding.save()
+
+            # not downgrade non-holding users with active monthly subscriptions
+            active_payments = user.payments.filter(end_time__gte=timezone.now())
 
             old_plan = user.plan
 
-            if user_holding >= 2 * needed_amount:
+            if user_holding_amount >= 2 * needed_amount:
                 user.plan = AdvUser.Plans.PREMIUM
-            elif user_holding >= needed_amount:
-                user.plan = AdvUser.Plans.STANDARD
+            elif user_holding_amount >= needed_amount:
+                if active_payments.count() >= 2 or active_payments.first().grants_plan == AdvUser.Plans.PREMIUM:
+                    user.plan = AdvUser.Plans.PREMIUM
+                else:
+                    user.plan = AdvUser.Plans.STANDARD
             else:
-                user.plan = AdvUser.Plans.FREE
+                if active_payments.count() >= 2 or active_payments.first().grants_plan == AdvUser.Plans.PREMIUM:
+                    user.plan = AdvUser.Plans.PREMIUM
+                elif active_payments.count() == 1:
+                    user.plan = AdvUser.Plans.STANDARD
+                else:
+                    user.plan = AdvUser.Plans.FREE
 
             user.save()
 
             if old_plan != user.plan:
-                logging.info(f'{user.username} is now holding {user_holding} in LESS, new plan - {user.plan}')
+                logging.info(f'{user.username} is now holding {user_holding_amount} in LESS, new plan - {user.plan}')
 
     logging.info('ending hold check')

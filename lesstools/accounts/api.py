@@ -21,6 +21,7 @@ from lesstools.accounts.models import PlanPrice, AdvUser
 
 import logging
 
+from lesstools.accounts.serializers import PriceSerializer
 from lesstools.analytics.models import Pair
 from lesstools.settings import FAVOURITE_PAIRS_LIMIT
 
@@ -56,8 +57,7 @@ def generate_metamask_message(request):
 def plan_price(request):
     """Plan price"""
     price = PlanPrice.objects.all().first()
-    return Response({'monthly_price': price.monthly_price_in_usd,
-                     'holding_amount': price.holding_amount_in_less})
+    return Response(PriceSerializer(price).data)
 
 
 @swagger_auto_schema(
