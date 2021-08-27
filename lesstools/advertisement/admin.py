@@ -10,10 +10,13 @@ class ADVForm(forms.ModelForm):
 
     def clean(self):
         adv_count = ADV.objects.all()
+        old_position = self.initial.get('position') if self.initial else None
         selected_position = self.cleaned_data.get('position')
-        if (len(adv_count.filter(position=ADV.TOP)) >= 1 and selected_position == ADV.TOP) \
-                or (len(adv_count.filter(position=ADV.MID)) >= 3 and selected_position == ADV.MID) \
-                or (len(adv_count.filter(position=ADV.BOT)) >= 3 and selected_position == ADV.BOT):
+        if (len(adv_count.filter(position=ADV.TOP)) >= 1 and selected_position == ADV.TOP and old_position != ADV.TOP) \
+                or (len(adv_count.filter(position=ADV.MID)) >= 3 and selected_position == ADV.MID
+                    and old_position != ADV.MID) \
+                or (len(adv_count.filter(position=ADV.BOT)) >= 3 and selected_position == ADV.BOT
+                    and old_position != ADV.BOT):
             raise forms.ValidationError(f'Limit of advertisements for {selected_position} is exceeded')
 
         return self.cleaned_data
