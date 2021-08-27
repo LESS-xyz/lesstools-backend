@@ -65,12 +65,14 @@ def check_hold():
             if user_holding_amount >= 2 * needed_amount:
                 user.plan = AdvUser.Plans.PREMIUM
             elif user_holding_amount >= needed_amount:
-                if active_payments.count() >= 2 or active_payments.first().grants_plan == AdvUser.Plans.PREMIUM:
+                if active_payments.count() >= 2 or (active_payments.exists() and
+                                                    active_payments.first().grants_plan == AdvUser.Plans.PREMIUM):
                     user.plan = AdvUser.Plans.PREMIUM
                 else:
                     user.plan = AdvUser.Plans.STANDARD
             else:
-                if active_payments.count() >= 2 or active_payments.first().grants_plan == AdvUser.Plans.PREMIUM:
+                if active_payments.count() >= 2 or (active_payments.exists() and
+                                                    active_payments.first().grants_plan == AdvUser.Plans.PREMIUM):
                     user.plan = AdvUser.Plans.PREMIUM
                 elif active_payments.count() == 1:
                     user.plan = AdvUser.Plans.STANDARD
