@@ -40,7 +40,7 @@ def check_hold():
     logging.info('starting hold check')
 
     needed_amount = PlanPrice.objects.all().first().holding_amount_in_less
-
+    # todo if network does not allow holding - cancel
     for network in Network.objects.filter(allows_holding_for_paid_plans=True):
         web3 = network.get_web3_connection()
         less_token_contract = web3.eth.contract(Web3.toChecksumAddress(network.less_token_address), abi=ABI)

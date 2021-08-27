@@ -7,7 +7,7 @@ class PlanPaymentAdmin(admin.ModelAdmin):
 
 
 class AdvUserAdmin(admin.ModelAdmin):
-    readonly_fields = ('holdings',)
+    readonly_fields = ('holdings', 'password')
 
     @admin.display(description='User LESS holdings in supported networks')
     def holdings(self, instance):

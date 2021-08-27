@@ -42,6 +42,7 @@ def apply_payment(tx, network=None):
     price = PlanPrice.objects.all().first().monthly_price_in_usd
     # allow at least 5% difference due to the volatile rates
     if float(price) * 0.95 <= usd_amount <= float(price) * 1.05:
+        # todo check logic if already holding for a plan
         if user.plan == AdvUser.Plans.FREE:
             user.plan = AdvUser.Plans.STANDARD
             payment.grants_plan = AdvUser.Plans.STANDARD
