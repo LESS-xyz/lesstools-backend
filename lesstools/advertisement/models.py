@@ -49,16 +49,18 @@ class ADV(models.Model):
                 raise ImgError(f'img is smaller than {self.SIZE_TOP}')
         elif self.position == self.MID:
             if not (self.icon.width >= self.SIZE_MID[0] and self.icon.height >= self.SIZE_MID[1]
-                    and len(self.name) >= 2 and len(self.sub_name) >+ 3 and len(self.description) >= 10):
+                    and len(self.name) >= 2 and len(self.sub_name) >= 3 and len(self.description) >= 10):
                 raise ImgError(f'img is smaller than {self.SIZE_MID} or name/sub_name/description is too short')
         elif self.position == self.BOT:
             if not (self.icon.width >= self.SIZE_BOT[0] and self.icon.height >= self.SIZE_BOT[1]):
                 raise ImgError(f'img is smaller than {self.SIZE_BOT}')
         super(ADV, self).save(*args, **kwargs)
 
+    # TODO remove images from server and IPFS node when the database record is dropped
+
     def get_ipfs_img(self):
         """Give url if server can't give img"""
         return f'https://ipfs.io/ipfs/{self.hash}'
 
     def __str__(self):
-        return f'{self.name} {self.position}'
+        return f'{self.id} - {self.name if self.name is None else "<no name>"}, position - {self.position}'

@@ -23,9 +23,8 @@ class ADVForm(forms.ModelForm):
 
 
 class ADVAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sub_name', 'position')
-    fields = [('name', 'sub_name'), 'icon', 'description', 'position']
     readonly_fields = ('hash',)
+    fields = [('name', 'sub_name'), 'icon', 'description', 'position', readonly_fields]
     form = ADVForm
 
 
