@@ -26,7 +26,7 @@ def delete_locked(sender, **kwargs):
     logging.error('you can not delete price')
     raise APIException
 
-
+# probably unnecessary
 @receiver(pre_save, sender=AdvUser)
 def check_count_favorite_pairs(sender, **kwargs):
     """Check users' favorite pairs limit"""

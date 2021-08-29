@@ -152,4 +152,3 @@ def add_or_remove_favourite_pair(request):
         return Response(f'Favourite pairs count limit exceeded for the user. Current plan: {user.plan}.'
                         f' Limit of {FAVOURITE_PAIRS_LIMIT} for user {user.username} is reached',
                         status=status.HTTP_207_MULTI_STATUS)
-
