@@ -24,7 +24,8 @@ class AdvUser(AbstractUser):
         STANDARD = 'Standard'
         PREMIUM = 'Premium'
 
-    plan = models.CharField(max_length=10, choices=Plans.choices, default=Plans.FREE)
+    plan_by_payments = models.CharField(max_length=10, choices=Plans.choices, default=Plans.FREE)
+    plan_by_holding = models.CharField(max_length=10, choices=Plans.choices, default=Plans.FREE)
 
     # avoiding circular import error
     favourite_pairs = models.ManyToManyField('analytics.Pair', blank=True, related_name='favourite_of')

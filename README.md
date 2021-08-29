@@ -6,9 +6,9 @@ manage.py loaddata lesstools/fixtures/base_payment_entities.json
 ```
 after applying migrations.
 
-If the current database state of network and token entities (rates incl.) is needed to be used as a base one, it can be saved by running:
+If the current database state of plan price, network and token entities (rates incl.) is needed to be used as a base one, it can be saved by running:
 ```shell
-manage.py dumpdata networks rates -o lesstools/fixtures/base_payment_entities
+manage.py dumpdata --indent 4 networks rates accounts.PlanPrice -o lesstools/fixtures/base_payment_entities.json
 ```
 \
 Both commands can be run inside docker containers preceded by:

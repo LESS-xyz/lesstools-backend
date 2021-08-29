@@ -145,10 +145,13 @@ def add_or_remove_favourite_pair(request):
     if user.favourite_pairs.filter(address=pair_address, platform=platform).exists():
         user.favourite_pairs.remove(pair)
         return Response(False, status=status.HTTP_200_OK)
-    if user.plan == AdvUser.Plans.FREE and user.favourite_pairs.all().count() < FAVOURITE_PAIRS_LIMIT:
+    if user.plan_by_payments != AdvUser.Plans.FREE or user.plan_by_holding != AdvUser.Plans.FREE:
+        user.favourite_pairs.add(pair)
+        return Response(True, status=status.HTTP_200_OK)
+    elif user.favourite_pairs.all().count() < FAVOURITE_PAIRS_LIMIT:
         user.favourite_pairs.add(pair)
         return Response(True, status=status.HTTP_200_OK)
     else:
-        return Response(f'Favourite pairs count limit exceeded for the user. Current plan: {user.plan}.'
+        return Response(f'Favourite pairs count limit exceeded for the user. Current plan: {user.plan_by_payments}.'
                         f' Limit of {FAVOURITE_PAIRS_LIMIT} for user {user.username} is reached',
                         status=status.HTTP_207_MULTI_STATUS)

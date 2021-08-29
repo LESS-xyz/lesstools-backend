@@ -13,24 +13,24 @@ from lesstools.accounts.abis.balance_of_LESS import ABI
 def check_paid():
     logging.info('starting paid check')
 
-    for user in AdvUser.objects.exclude(plan=AdvUser.Plans.FREE):
-        old_plan = user.plan
+    for user in AdvUser.objects.exclude(plan_by_payments=AdvUser.Plans.FREE):
+        old_plan = user.plan_by_payments
 
         # for every user with active plan check if payment end time has come and downgrade him
         active_payments = user.payments.filter(end_time__gte=timezone.now())
         if active_payments.count() == 0:
-            user.plan = AdvUser.Plans.FREE
+            user.plan_by_payments = AdvUser.Plans.FREE
         elif active_payments.count() == 1:
             if active_payments.first().grants_plan == AdvUser.Plans.STANDARD:
-                user.plan = AdvUser.Plans.STANDARD
+                user.plan_by_payments = AdvUser.Plans.STANDARD
             elif active_payments.first().grants_plan == AdvUser.Plans.PREMIUM:
-                user.plan = AdvUser.Plans.PREMIUM
+                user.plan_by_payments = AdvUser.Plans.PREMIUM
         else:
             continue
 
         user.save()
-        if old_plan != user.plan:
-            logging.info(f'payment of {user.username} is expired, downgrading to {user.plan} plan')
+        if old_plan != user.plan_by_payments:
+            logging.info(f'payment of {user.username} is expired, downgrading to {user.plan_by_payments} plan')
 
     logging.info('ending paid check')
 
@@ -56,34 +56,38 @@ def check_hold():
             user_holding.less_holding_amount = user_holding_amount
             user_holding.save()
 
-            # not downgrade non-holding users with active monthly subscriptions
-            active_payments = user.payments.filter(end_time__gte=timezone.now())
-
-            old_plan = user.plan
+            old_plan = user.plan_by_holding
 
             if user_holding_amount >= 2 * needed_amount:
-                user.plan = AdvUser.Plans.PREMIUM
+                user.plan_by_holding = AdvUser.Plans.PREMIUM
             elif user_holding_amount >= needed_amount:
-                if active_payments.count() >= 2 or (active_payments.exists() and
-                                                    active_payments.first().grants_plan == AdvUser.Plans.PREMIUM):
-                    user.plan = AdvUser.Plans.PREMIUM
-                else:
-                    user.plan = AdvUser.Plans.STANDARD
+                user.plan_by_holding = AdvUser.Plans.STANDARD
             else:
-                if active_payments.count() >= 2 or (active_payments.exists() and
-                                                    active_payments.first().grants_plan == AdvUser.Plans.PREMIUM):
-                    user.plan = AdvUser.Plans.PREMIUM
-                elif active_payments.count() == 1:
-                    user.plan = AdvUser.Plans.STANDARD
-                else:
-                    user.plan = AdvUser.Plans.FREE
+                user.plan_by_holding = AdvUser.Plans.FREE
 
             user.save()
 
-            if old_plan != user.plan:
-                logging.info(f'{user.username} is now holding {user_holding_amount} in LESS, new plan - {user.plan}')
+            if old_plan != user.plan_by_holding:
+                logging.info(f'{user.username} is now holding {user_holding_amount} in LESS, '
+                             f'new plan - {user.plan_by_holding}')
 
     logging.info('ending hold check')
 
 
-# todo if network does not allow holding - cancel
+@dramatiq.actor(max_retries=0)
+def cancel_invalid_holdings():
+    logging.info('starting invalid holdings check')
+
+    for user in AdvUser.objects.exclude(plan_by_holding=AdvUser.Plans.FREE):
+        has_supported_networks = False
+        for holding_obj in user.holds.all():
+            if holding_obj.network.allows_holding_for_paid_plans:
+                has_supported_networks = True
+                break
+
+        if not has_supported_networks:
+            user.plan_by_holding = AdvUser.Plans.FREE
+            user.save()
+            logging.info(f'plan by holding of {user} has been downgraded, cause some networks became unsupported')
+
+    logging.info('ending invalid holdings check')

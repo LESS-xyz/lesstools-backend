@@ -1,5 +1,14 @@
 [
    {
+      "model":"accounts.planprice",
+      "pk":1,
+      "fields":{
+         "monthly_price_in_usd":100,
+         "holding_amount_in_less":1000
+      }
+   },
+
+   {
       "model":"networks.network",
       "pk":1,
       "fields":{
@@ -27,7 +36,6 @@
          "native_token":3,
          "allows_holding_for_paid_plans":true,
          "less_token_address":"0x064B719cCE817D4B4EE27EA5Cd8A7cA9B3dd53cC"
-
       }
    },
 

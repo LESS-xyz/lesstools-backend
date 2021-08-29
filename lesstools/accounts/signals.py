@@ -26,12 +26,14 @@ def delete_locked(sender, **kwargs):
     logging.error('you can not delete price')
     raise APIException
 
+
 # probably unnecessary
 @receiver(pre_save, sender=AdvUser)
 def check_count_favorite_pairs(sender, **kwargs):
     """Check users' favorite pairs limit"""
     user = kwargs['instance']
-    if len(user.favorite_pairs) >= 10 and user.plan.FREE:
+    if len(user.favorite_pairs) >= 10 and \
+            user.plan_by_payments == AdvUser.Plans.FREE and user.plan_by_holding == AdvUser.Plans.FREE:
         logging.error(f'{user.username} have limit 10 or less favorite pairs!')
         raise APIException
     else:

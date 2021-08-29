@@ -9,14 +9,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.AdvUser
         read_only_field = ('paid_until', 'holdings',)
-        fields = read_only_field + ('id', 'username', 'plan')
+        fields = read_only_field + ('id', 'username', 'plan_by_payments', 'plan_by_holding')
 
     def get_paid_until(self, obj):
         return obj.payments.order_by('-end_time').first().end_time \
                if obj.payments.order_by('-end_time').first() else None
 
     def get_holdings(self, obj):
-        return {holding.network.name: holding.less_holding_amount for holding in obj.holds.all()}
+        return {holding.network.name: holding.less_holding_amount
+                for holding in obj.holds.filter(network__allows_holding_for_paid_plans=True)}
 
 
 class PriceSerializer(serializers.ModelSerializer):

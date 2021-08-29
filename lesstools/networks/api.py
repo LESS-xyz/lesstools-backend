@@ -39,16 +39,16 @@ def apply_payment(tx, network=None):
         amount=tx['value'], token_used=token
     )
 
-    old_plan = user.plan
+    old_plan = user.plan_by_payments
 
     price = PlanPrice.objects.all().first().monthly_price_in_usd
     # allow at least 5% difference due to the volatile rates
     if float(price) * 0.95 <= usd_amount <= float(price) * 1.05:
         if old_plan == AdvUser.Plans.FREE:
-            user.plan = AdvUser.Plans.STANDARD
+            user.plan_by_payments = AdvUser.Plans.STANDARD
             payment.grants_plan = AdvUser.Plans.STANDARD
         elif old_plan == AdvUser.Plans.STANDARD:
-            user.plan = AdvUser.Plans.PREMIUM
+            user.plan_by_payments = AdvUser.Plans.PREMIUM
             # cause the payment is additional when the first component expires user shouldn't keep Premium plan
             payment.grants_plan = AdvUser.Plans.STANDARD
         else:
@@ -56,7 +56,7 @@ def apply_payment(tx, network=None):
             # this will still count for the next 30 days when other expire
             payment.grants_plan = AdvUser.Plans.STANDARD
     elif float(2 * price) * 0.95 <= usd_amount <= float(2 * price) * 1.05:
-        user.plan = AdvUser.Plans.PREMIUM
+        user.plan_by_payments = AdvUser.Plans.PREMIUM
         payment.grants_plan = AdvUser.Plans.PREMIUM
     else:
         payment.define_end_time(successful=False)
@@ -65,8 +65,8 @@ def apply_payment(tx, network=None):
 
     user.save()
     payment.define_end_time(successful=True)
-    if old_plan != user.plan:
-        logging.info(f"{user} has changed plan to {user.plan} successfully")
+    if old_plan != user.plan_by_payments:
+        logging.info(f"{user} has changed plan to {user.plan_by_payments} successfully")
 
 
 def process_native_txs(native_txs, network):

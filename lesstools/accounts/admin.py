@@ -11,7 +11,8 @@ class AdvUserAdmin(admin.ModelAdmin):
 
     @admin.display(description='User LESS holdings in supported networks')
     def holdings(self, instance):
-        return {holding.network.name: float(holding.less_holding_amount) for holding in instance.holds.all()}
+        return {holding.network.name: float(holding.less_holding_amount)
+                for holding in instance.holds.filter(network__allows_holding_for_paid_plans=True)}
 
 
 admin.site.register(models.PlanPrice)
