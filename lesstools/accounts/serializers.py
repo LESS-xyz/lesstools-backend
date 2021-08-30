@@ -24,3 +24,4 @@ class PriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PlanPrice
         read_only_field = ('monthly_price_in_usd', 'holding_amount_in_less',)
+        fields = read_only_field
