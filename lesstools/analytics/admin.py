@@ -10,7 +10,11 @@ class TokenAdmin(admin.ModelAdmin):
     search_fields = ['id', 'cmc_id', 'cmc_slug', 'eth_address', 'bsc_address', 'polygon_address']
 
 
+class UserPairVoteAdmin(admin.ModelAdmin):
+    readonly_fields = ('vote',)
+
+
 # Register your models here.
 admin.site.register(Token, TokenAdmin)
 admin.site.register(Pair, PairAdmin)
-admin.site.register(UserPairVote)
+admin.site.register(UserPairVote, UserPairVoteAdmin)
