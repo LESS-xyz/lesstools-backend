@@ -15,7 +15,9 @@ class Network(models.Model):
     native_api_url = models.CharField(max_length=400)
     token_api_url = models.CharField(max_length=400)
 
-    native_token = models.ForeignKey('PaymentToken', on_delete=models.RESTRICT, related_name='NOT_NEEDED+')
+    native_token = models.ForeignKey('PaymentToken', on_delete=models.RESTRICT, related_name='NOT_NEEDED+',
+                                     help_text='Just for deriving USD rates for native payments. '
+                                               'So wrapped version will suffice too')
 
     allows_holding_for_paid_plans = models.BooleanField(default=False)
     less_token_address = models.CharField(max_length=128, null=True, blank=True)
@@ -53,4 +55,4 @@ class PaymentToken(models.Model):
         super(PaymentToken, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.currency
+        return f'{self.currency} on {self.network.name} blockchain'

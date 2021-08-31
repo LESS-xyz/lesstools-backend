@@ -28,6 +28,21 @@
       "pk":2,
       "fields":{
          "name":"binance-smart-chain",
+         "endpoint":"https://bsc-dataseed.binance.org/",
+         "last_processed_block":10504344,
+         "needs_poa_middleware":true,
+         "native_api_url":"https://api.bscscan.com/api?module=account&action=txlist&address={address}&startblock={startblock}&endblock={endblock}&sort=asc&",
+         "token_api_url":"https://api.bscscan.com/api?module=account&action=tokentx&address={address}&startblock={startblock}&endblock={endblock}&sort=asc&",
+         "native_token":3,
+         "allows_holding_for_paid_plans":false,
+         "less_token_address":"0xb698ac9bc82c718d8eba9590564b9a5aa53d58e6"
+      }
+   },
+   {
+      "model":"networks.network",
+      "pk":3,
+      "fields":{
+         "name":"bsc testnet",
          "endpoint":"https://data-seed-prebsc-2-s1.binance.org:8545/",
          "last_processed_block":11733199,
          "needs_poa_middleware":true,
@@ -91,12 +106,36 @@
       "model":"networks.paymenttoken",
       "pk":5,
       "fields":{
+         "network":1,
+         "address":"0x62786Eeacc9246b4018e0146cb7a3efeACD9459D",
+         "currency":"LESS",
+         "coingecko_code":"less-network",
+         "decimals":18,
+         "usd_rate":6
+      }
+   },
+   {
+      "model":"networks.paymenttoken",
+      "pk":6,
+      "fields":{
          "network":2,
+         "address":"0xb698ac9bc82c718d8eba9590564b9a5aa53d58e6",
+         "currency":"LESS",
+         "coingecko_code":"less-network",
+         "decimals":18,
+         "usd_rate":6
+      }
+   },
+   {
+      "model":"networks.paymenttoken",
+      "pk":7,
+      "fields":{
+         "network":3,
          "address":"0x064B719cCE817D4B4EE27EA5Cd8A7cA9B3dd53cC",
          "currency":"WDUCX",
          "coingecko_code":"wrapped-ducatusx",
          "decimals":18,
-         "usd_rate":6
+         "usd_rate":7
       }
    },
 
@@ -148,6 +187,15 @@
    {
       "model":"rates.usdrate",
       "pk":6,
+      "fields":{
+         "currency":"LESS",
+         "rate":"0.01",
+         "updated_at":"2021-08-24T16:38:51.221Z"
+      }
+   },
+   {
+      "model":"rates.usdrate",
+      "pk":7,
       "fields":{
          "currency":"WDUCX",
          "rate":"0.26",
