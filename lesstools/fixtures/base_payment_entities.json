@@ -84,10 +84,10 @@
       "fields":{
          "network":2,
          "address":"0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-         "currency":"binance-smart-chain",
+         "currency":"WBNB",
          "coingecko_code":"wbnb",
          "decimals":18,
-         "usd_rate":4
+         "usd_rate":3
       }
    },
    {
@@ -111,7 +111,7 @@
          "currency":"LESS",
          "coingecko_code":"less-network",
          "decimals":18,
-         "usd_rate":6
+         "usd_rate":5
       }
    },
    {
@@ -123,7 +123,7 @@
          "currency":"LESS",
          "coingecko_code":"less-network",
          "decimals":18,
-         "usd_rate":6
+         "usd_rate":5
       }
    },
    {
@@ -135,7 +135,7 @@
          "currency":"WDUCX",
          "coingecko_code":"wrapped-ducatusx",
          "decimals":18,
-         "usd_rate":7
+         "usd_rate":6
       }
    },
 
@@ -170,15 +170,6 @@
       "model":"rates.usdrate",
       "pk":4,
       "fields":{
-         "currency":"binance-smart-chain",
-         "rate":"467.78",
-         "updated_at":"2021-08-24T16:38:51.211Z"
-      }
-   },
-   {
-      "model":"rates.usdrate",
-      "pk":5,
-      "fields":{
          "currency":"USDT",
          "rate":"1.00",
          "updated_at":"2021-08-24T16:38:51.221Z"
@@ -186,7 +177,7 @@
    },
    {
       "model":"rates.usdrate",
-      "pk":6,
+      "pk":5,
       "fields":{
          "currency":"LESS",
          "rate":"0.01",
@@ -195,7 +186,7 @@
    },
    {
       "model":"rates.usdrate",
-      "pk":7,
+      "pk":6,
       "fields":{
          "currency":"WDUCX",
          "rate":"0.26",
