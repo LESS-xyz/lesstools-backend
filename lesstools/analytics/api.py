@@ -8,6 +8,8 @@ from lesstools.analytics.models import Token
 from lesstools.settings import CMC_COIN_INFO_API_URL, CMC_MAP_API_URL, CMC_API_KEY, ETHPLORER_API_KEY, \
     ETHPLORER_TOKEN_INFO_API_URL
 
+from django.db.models import Q
+
 CMC_PAGE_SIZE = 10000
 
 
@@ -35,15 +37,25 @@ def mapping_update(run_full_update=False):
                 normalized_address = None
 
             if run_full_update:
-                Token.objects.update_or_create(cmc_id=token['id'], defaults={
-                    'name': token['name'],
-                    'symbol': token['symbol'],
-                    'eth_address': normalized_address if (normalized_address is not None and
-                                                          token['platform']['id'] == Token.ETH_PLATFORM_CMC_ID) else None,
-                    'bsc_address': normalized_address if (normalized_address is not None and
-                                                          token['platform']['id'] == Token.BSC_PLATFORM_CMC_ID) else None,
-                    'polygon_address': normalized_address if (normalized_address is not None and
-                                                              token['platform']['id'] == Token.POLYGON_PLATFORM_CMC_ID) else None})
+                possible_eth_address = normalized_address if (normalized_address is not None and
+                                                              token['platform']['id'] == Token.ETH_PLATFORM_CMC_ID) else None
+                possible_bsc_address = normalized_address if (normalized_address is not None and
+                                                              token['platform']['id'] == Token.BSC_PLATFORM_CMC_ID) else None
+                possible_polygon_address = normalized_address if (normalized_address is not None and
+                                                                  token['platform']['id'] == Token.POLYGON_PLATFORM_CMC_ID) else None
+
+                # cause all these fields in Q are unique,
+                # we should not try creating new one, if not such cmc_id exists, but addresses do
+                Token.objects.update_or_create(Q(cmc_id=token['id']) |
+                                               Q(eth_address=possible_eth_address) |
+                                               Q(bsc_address=possible_bsc_address) |
+                                               Q(polygon_address=possible_polygon_address),
+                                               defaults={
+                                                   'name': token['name'],
+                                                   'symbol': token['symbol'],
+                                                   'eth_address': possible_eth_address,
+                                                   'bsc_address': possible_bsc_address,
+                                                   'polygon_address': possible_polygon_address})
             elif not Token.objects.filter(cmc_id=token['id']).exists():
                 Token(cmc_id=token['id'],
                       name=token['name'],
@@ -79,7 +91,8 @@ def try_extend_if_needed(token: Token, platform: str):
             return token
 
         if token.price_in_usd is None or token.price_in_usd == 0:
-            token.price_in_usd = data['price']['rate'] if (data['price'] and data['price']['currency'] == 'USD') else None
+            token.price_in_usd = data['price']['rate'] if (
+                        data['price'] and data['price']['currency'] == 'USD') else None
         if token.total_supply is None or token.total_supply == 0:
             token.total_supply = data['totalSupply']
         if token.holders_count is None or token.holders_count == 0:
