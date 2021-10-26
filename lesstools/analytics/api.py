@@ -1,6 +1,7 @@
 import logging
 
 import requests
+from python_graphql_client import GraphqlClient
 
 from web3 import Web3
 
@@ -9,6 +10,7 @@ from lesstools.settings import CMC_COIN_INFO_API_URL, CMC_MAP_API_URL, CMC_API_K
     ETHPLORER_TOKEN_INFO_API_URL
 
 from django.db.models import Q
+from django.utils import timezone
 
 CMC_PAGE_SIZE = 10000
 
@@ -199,3 +201,97 @@ def info_from_cmc(token_address, token_name, token_symbol, platform):
     token.save()
 
     return token
+
+
+def candles_creater(pair_id, url, time_interval):
+    client = GraphqlClient(endpoint=url)
+
+    now = int(timezone.now().timestamp())
+    time = {
+        'minute': 60,
+        'hour': 60 * 60,
+        'day': 60 * 60 * 24,
+        'week': 60 * 60 * 24 * 7,
+        'month': 60 * 60 * 24 * 30
+    }
+
+    t = {'end': now,
+         'start': now - time[time_interval]}
+    limits = []
+    for x in range(0, 240):
+        limits.append([t['end'], t['start']])
+        t['end'] = t['start']
+        t['start'] -= time[time_interval]
+
+    query = """
+        {
+            pairs(where: {id: "%s"}) {
+                id
+                swaps(where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc) {
+                    timestamp
+                    token0PriceUSD
+                    token0PriceETH
+                    token1PriceUSD
+                    token1PriceETH
+                }
+            }
+        }
+    """ % (pair_id, limits[-1][1])
+
+    response_data = client.execute(query=query)
+
+    candles = []
+    cache = []
+    for limit in limits:
+        for r in response_data['data']['pairs'][0]['swaps']:
+            if limit[0] >= int(r['timestamp']) > limit[1]:
+                cache.append({
+                    'timestamp': r['timestamp'],
+                    'token0PriceUSD': r['token0PriceUSD'],
+                    'token0PriceETH': r['token0PriceETH'],
+                    'token1PriceUSD': r['token1PriceUSD'],
+                    'token1PriceETH': r['token1PriceETH'],
+                })
+        candles.append(cache)
+        cache = []
+
+    result = []
+    usd_list_for_sort = []
+    times = {}
+    count = 0
+    for candle in candles:
+        for swap in candle:
+            usd_list_for_sort.append(swap['token1PriceUSD'])
+            times[swap['timestamp']] = swap['token1PriceUSD']
+        sort = sorted(usd_list_for_sort)
+        sorted_tuple = sorted(times.items(), key=lambda x: x[0])
+        if len(usd_list_for_sort) > 0 and len(candles[count]):
+            result.append(dict(**candles[count][0], **{'high': sort[-1], 'low': sort[0],
+                                                       'start': sorted_tuple[0], 'end': sorted_tuple[-1]}))
+        else:
+            result.append('')
+        count += 1
+        usd_list_for_sort = []
+    candle = {}
+    time_count = 0
+    for x in result:
+        try:
+            candle[str(time_count)] = {
+                'start_time': limits[time_count][0],
+                'end_time': limits[time_count][1],
+                'start': x['start'],
+                'end': x['end'],
+                'high': x['high'],
+                'low': x['low']
+            }
+        except:
+            candle[str(time_count)] = {
+                'start_time': limits[time_count][0],
+                'end_time': limits[time_count][1],
+                'start': ' ',
+                'end': ' ',
+                'high': ' ',
+                'low': ' '
+            }
+        time_count += 1
+    return candle

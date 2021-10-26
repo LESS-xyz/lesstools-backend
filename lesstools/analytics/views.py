@@ -9,12 +9,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from lesstools.accounts.models import AdvUser
 from lesstools.analytics.models import Pair, UserPairVote
 from lesstools.analytics.serializers import PairSerializer, UserPairVoteSerializer
 
-from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed
+from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed,\
+    candles_creater
 
 CMC_PAGE_SIZE = 10000
 
@@ -165,3 +167,51 @@ def pair_vote(request):
         user_pair_vote.save()
 
     return Response(UserPairVoteSerializer(user_pair_vote, context={'username': user_address}).data)
+
+
+graph_response = openapi.Response(
+    description='Values for candles graph',
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'start_time': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'end_time': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'start': openapi.Schema(type=openapi.TYPE_OBJECT),
+            'end': openapi.Schema(type=openapi.TYPE_OBJECT),
+            'high': openapi.Schema(type=openapi.TYPE_OBJECT),
+            'low': openapi.Schema(type=openapi.TYPE_OBJECT),
+        }
+    )
+)
+
+
+class Candles(APIView):
+    @swagger_auto_schema(
+        operation_description="Graph candle info",
+        responses={200: graph_response}
+    )
+    def get(self, request, pair_id, pool, time_interval):
+        pair_id = pair_id
+        pool = pool
+        time_interval = time_interval
+        swap = {'apeswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/apeswap-lesstools',
+                'babyswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/babyswap-lesstools',
+                'biswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/biswap-lesstools',
+                'honeyswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/honeyswap-lesstools',
+                'joetrader': 'https://api.thegraph.com/subgraphs/name/rock-n-block/joetrader-lesstools',
+                'mdex_bsc': 'https://api.thegraph.com/subgraphs/name/rock-n-block/mdex-bsc-lesstools',
+                'pancakeswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-pancake',
+                'pangolinswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/pangolinswap-lesstools',
+                'quickswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-quickswap',
+                'spiritswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/spiritswap-lesstools',
+                'spookyswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/spookyswap-lesstools',
+                'uniswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-uniswap-v2',
+                'BSC': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-bsc',
+                'avalanche': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-avalanche',
+                'xdai': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-xdai',
+                'fantom': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-fantom',
+                'matic': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-matic',
+                'mainnet': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap',
+                }
+        graph_response = candles_creater(pair_id=pair_id, url=swap[pool], time_interval=time_interval)
+        return Response(graph_response, status=status.HTTP_200_OK)
