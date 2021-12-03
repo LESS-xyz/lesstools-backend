@@ -7,7 +7,7 @@ class TokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Token
         fields = ('cmc_id', 'cmc_slug', 'name', 'symbol', 'total_supply', 'circulating_supply', 'holders_count',
-                  'eth_address', 'bsc_address', 'polygon_address',
+                  'eth_address', 'bsc_address', 'polygon_address', 'fantom_address', 'xdai_address', 'avalanche_address',
                   'website_url', 'chat_urls', 'twitter_url')
 
 

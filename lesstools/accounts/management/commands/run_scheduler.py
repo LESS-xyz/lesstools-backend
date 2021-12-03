@@ -6,6 +6,7 @@ from lesstools.accounts.tasks import check_paid, check_hold, cancel_invalid_hold
 from lesstools.networks.tasks import check_payment_address
 from lesstools.rates.tasks import update_rates
 from lesstools.analytics.tasks import periodic_cmc_mapping_update
+from lesstools.analytics.api import swap_check
 
 
 class Command(BaseCommand):
@@ -21,6 +22,7 @@ class Command(BaseCommand):
         scheduler.add_job(update_rates.send, 'interval', seconds=300)
         scheduler.add_job(check_payment_address.send, 'interval', seconds=60)
         scheduler.add_job(periodic_cmc_mapping_update.send, 'interval', days=1)
+        scheduler.add_job(swap_check.send, 'interval', minutes=2)
         # ... add another jobs
         self.stdout.write(self.style.NOTICE('Start scheduler'))
         scheduler.start()

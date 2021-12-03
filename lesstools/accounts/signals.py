@@ -17,6 +17,7 @@ def send_message_to_telegram(sender, **kwargs):
         'tx_hash': new_transactions.tx_hash,
         'currency': new_transactions.currency,
     }
+    print('START SIGNAL')
     await new_transaction(message='new_transaction', transaction=new_transaction_information)
 
 

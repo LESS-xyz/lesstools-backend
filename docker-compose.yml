@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    command: poetry run python manage.py rundramatiq
+    command: poetry run python manage.py rundramatiq --processes 6 --threads 6
     networks:
       - main
   scheduler:
@@ -60,6 +60,5 @@ services:
       - .env
     networks:
       - main
-
 networks:
   main:

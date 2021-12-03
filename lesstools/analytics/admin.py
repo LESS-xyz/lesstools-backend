@@ -7,7 +7,7 @@ class PairAdmin(admin.ModelAdmin):
 
 
 class TokenAdmin(admin.ModelAdmin):
-    search_fields = ['id', 'cmc_id', 'cmc_slug', 'eth_address', 'bsc_address', 'polygon_address']
+    search_fields = ['id', 'cmc_id', 'cmc_slug', 'eth_address', 'bsc_address', 'polygon_address', 'fantom_address', 'xdai_address', 'avalanche_address']
 
 
 class UserPairVoteAdmin(admin.ModelAdmin):

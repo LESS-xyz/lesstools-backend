@@ -2,6 +2,7 @@ import logging
 
 import dramatiq
 from .api import mapping_update
+from .models import NewPairCount
 
 
 @dramatiq.actor(max_retries=0)
@@ -22,3 +23,8 @@ def periodic_cmc_mapping_update():
 #         'trust': pair.trust,
 #     }
 #     await new_pair(message='new_pair', pair=pair_information)
+
+@dramatiq.actor(max_retries=0)
+def check_new_pair():
+    for swap in NewPairCount.objects.all():
+        swap_check(swap.name)

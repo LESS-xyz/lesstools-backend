@@ -1,0 +1,19 @@
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Token
+from tgbot.handlers import new_pair
+
+
+
+@receiver(post_save, sender=PlanPayment)
+def send_message_to_telegram(sender, **kwargs):
+    """Send to admin telegram bot information about new transaction"""
+    new_transactions = kwargs['instance']
+    new_transaction_information = {
+        'user_name': new_transactions.user.username,
+        'amount': new_transactions.amount,
+        'tx_hash': new_transactions.tx_hash,
+        'currency': new_transactions.currency,
+    }
+    await new_transaction(message='new_transaction', transaction=new_transaction_information)

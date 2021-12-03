@@ -9,12 +9,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from lesstools.accounts.models import AdvUser
 from lesstools.analytics.models import Pair, UserPairVote
 from lesstools.analytics.serializers import PairSerializer, UserPairVoteSerializer
+from lesstools.settings import SWAP
 
-from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed
+from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed, candles_creater
 
 CMC_PAGE_SIZE = 10000
 
@@ -57,7 +59,7 @@ def manual_cmc_mapping_update(request):
             'token_address': openapi.Schema(type=openapi.TYPE_STRING),
             'token_name': openapi.Schema(type=openapi.TYPE_STRING),
             'token_symbol': openapi.Schema(type=openapi.TYPE_STRING),
-            'platform': openapi.Schema(type=openapi.TYPE_STRING, enum=['ETH', 'BSC', 'POLYGON']),
+            'platform': openapi.Schema(type=openapi.TYPE_STRING, enum=['ETH', 'BSC', 'POLYGON', 'XDAI', 'AVALANCHE', 'FANTOM']),
         },
         required=['pair_address', 'token_address', 'token_name', 'token_symbol', 'platform']
     ),
@@ -119,7 +121,7 @@ def pair_info_retrieval(request):
         type=openapi.TYPE_OBJECT,
         properties={
             'pair_address': openapi.Schema(type=openapi.TYPE_STRING),
-            'platform': openapi.Schema(type=openapi.TYPE_STRING, enum=['ETH', 'BSC', 'POLYGON']),
+            'platform': openapi.Schema(type=openapi.TYPE_STRING, enum=['ETH', 'BSC', 'POLYGON', 'FANTOM', 'XDAI', 'AVALANCHE']),
             'vote': openapi.Schema(type=openapi.TYPE_INTEGER, enum=[-1, 1]),
         },
         required=['pair_address', 'vote']
@@ -165,3 +167,33 @@ def pair_vote(request):
         user_pair_vote.save()
 
     return Response(UserPairVoteSerializer(user_pair_vote, context={'username': user_address}).data)
+
+
+graph_response = openapi.Response(
+    description='Values for candles graph',
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'start_time': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'end_time': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'open': openapi.Schema(type=openapi.TYPE_STRING),
+            'close': openapi.Schema(type=openapi.TYPE_STRING),
+            'high': openapi.Schema(type=openapi.TYPE_STRING),
+            'low': openapi.Schema(type=openapi.TYPE_STRING),
+        }
+    )
+)
+
+
+class Candles(APIView):
+    @swagger_auto_schema(
+        operation_description="Graph candle info",
+        responses={200: graph_response}
+    )
+    def get(self, request, pair_id, pool, time_interval, candles):
+        graph_response = candles_creater(pair_id=pair_id, url=SWAP[pool], time_interval=time_interval, candles=candles)
+        if graph_response == {'error': 'Pair not found'}:
+            return Response(graph_response, status=status.HTTP_404_NOT_FOUND)
+        elif graph_response == {'error': 'api not reach'}:
+            return Response(graph_response, status=status.HTTP_504_GATEWAY_TIMEOUT)
+        return Response(graph_response, status=status.HTTP_200_OK)

@@ -8,6 +8,9 @@ class Token(models.Model):
     ETH_PLATFORM_CMC_ID = 1027
     BSC_PLATFORM_CMC_ID = 1839
     POLYGON_PLATFORM_CMC_ID = 3890
+    FANTOM_PLATFORM_CMC_ID = 3513
+    XDAI_PLATFORM_CMC_ID = 5601
+    AVALANCHE_PLATFORM_CMC_ID = 5805
 
     cmc_id = models.PositiveSmallIntegerField(unique=True, null=True)
     cmc_slug = models.CharField(max_length=50, null=True)
@@ -25,6 +28,9 @@ class Token(models.Model):
     eth_address = models.CharField(max_length=50, unique=True, null=True)
     bsc_address = models.CharField(max_length=50, unique=True, null=True)
     polygon_address = models.CharField(max_length=50, unique=True, null=True)
+    fantom_address = models.CharField(max_length=50, unique=True, null=True)
+    xdai_address = models.CharField(max_length=50, unique=True, null=True)
+    avalanche_address = models.CharField(max_length=50, unique=True, null=True)
 
     website_url = models.CharField(max_length=100, null=True)
     chat_urls = ArrayField(models.CharField(max_length=100), null=True)
@@ -36,6 +42,9 @@ class Pair(models.Model):
         ETH_PLATFORM = 'ETH'
         BSC_PLATFORM = 'BSC'
         POLYGON_PLATFORM = 'POLYGON'
+        XDAY_PLATFORM = 'XDAY'
+        FANTOM_PLATFORM = 'FANTOM'
+        AVALANCHE_PLATFORM = 'AVALANCHE'
 
     address = models.CharField(max_length=50)
     platform = models.CharField(max_length=10, choices=Platforms.choices)
@@ -66,3 +75,8 @@ class UserPairVote(models.Model):
 
     class Meta:
         unique_together = ('user', 'pair',)
+
+
+class NewPairCount(models.Model):
+    name = models.CharField(max_length=64)
+    count = models.PositiveIntegerField()

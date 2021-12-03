@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from lesstools.logging_settings import LOGGING
+from emoji import emojize
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +27,7 @@ SECRET_KEY = 'pz942#q+@yif&n#%o04z#_%$))f%ebp&=7)dvb)xn6(e%usb04'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '144.76.201.50', 'lesstools.rocknblock.io']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '144.76.201.50', 'tools.less.xyz']
 
 # LessTools platform settings
 FAVOURITE_PAIRS_LIMIT = 10
@@ -130,7 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     ),
 }
 
@@ -197,3 +197,105 @@ try:
     from lesstools.settings_local import *
 except ImportError:
     print('Cannot import local settings')
+
+SWAP = {
+        'apeswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/apeswap-lesstools',
+        'babyswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/babyswap-lesstools',
+        'biswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/biswap-lesstools',
+        'honeyswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/honeyswap-lesstools',
+        'joetrader': 'https://api.thegraph.com/subgraphs/name/rock-n-block/joe-trader-lesstools',
+        'mdex_bsc': 'https://api.thegraph.com/subgraphs/name/rock-n-block/mdex-bsc-lesstools',
+        'pancakeswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-pancake',
+        'pangolinswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/pangolin-lesstools',
+        'quickswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-quickswap',
+        'spiritswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/spiritswap-lesstools',
+        'spookyswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/spookyswap-lesstools',
+        'uniswap': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-uniswap-v2',
+        'BSC': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-bsc',
+        'avalanche': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-avalanche',
+        'xdai': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-xdai',
+        'fantom': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-fantom',
+        'matic': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap-matic',
+        'mainnet': 'https://api.thegraph.com/subgraphs/name/rock-n-block/lesstools-sushiswap'
+    }
+NETWORKS = {
+        'apeswap': 'bsc',
+        'babyswap': 'bsc',
+        'biswap': 'bsc',
+        'honeyswap': 'xdai',
+        'joetrader': 'avalanche',
+        'mdex_bsc': 'bsc',
+        'pancakeswap': 'bsc',
+        'pangolinswap': 'avalanche',
+        'quickswap': 'matic',
+        'spiritswap': 'fantom',
+        'spookyswap': 'fantom',
+        'uniswap': 'mainnet',
+        'BSC': 'bsc',
+        'avalanche': 'avalanche',
+        'xdai': 'xdai',
+        'fantom': 'fantom',
+        'matic': 'matic',
+        'mainnet': 'mainnet'
+    }
+BOT_TOKEN = '2068582159:AAESyHH-yOXd0TDKj1ZtyQxAzLmJFw_LUws'
+TELEGRAM_CHAT_ID_2 = '@lesstoolspairsBOT'
+SUSHISWAP = ['BSC', 'avalanche', 'xdai', 'fantom', 'matic', 'mainnet']
+Unicorn = emojize(':unicorn:', use_aliases=True)
+Sushi = emojize(':sushi:', use_aliases=True)
+Pancakes = emojize(':pancakes:', use_aliases=True)
+Farmer = emojize(':farmer:', use_aliases=True)
+Baby_bottle = emojize(':baby_bottle:', use_aliases=True)
+Monkey_face = emojize(':monkey_face:', use_aliases=True)
+Dragon = emojize(':dragon:', use_aliases=True)
+Hedgehog = emojize(':hedgehog:', use_aliases=True)
+Bee = emojize(':bee:', use_aliases=True)
+Ghost = emojize(':ghost:', use_aliases=True)
+Alien = emojize(':alien:', use_aliases=True)
+Dove = emojize(':dove:', use_aliases=True)
+Watermelon = emojize(':watermelon:', use_aliases=True)
+POOLS_EMOJI = {
+    'uniswap' : Unicorn,
+    'sushi' : Sushi,
+    'pancakeswap' : Pancakes,
+    'joetrader' : Farmer,
+    'babyswap' : Baby_bottle,
+    'apeswap' : Monkey_face,
+    'quickswap' : Dragon,
+    'pangolinswap' : Hedgehog,
+    'honeyswap' : Bee,
+    'spiritswap' : Ghost,
+    'spookyswap': Alien,
+    'biswap' : Dove,
+    'mdex' : Watermelon,
+    'fantom': Ghost,
+    'mainnet': Unicorn,
+    'avalanche': Unicorn,
+    'xdai': Unicorn,
+    'mdex_bsc' : Sushi,
+    'BSC' : Unicorn,
+}
+
+EXECLUDE_LIST = ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  '0x6b175474e89094c44da98b954eedeac495271d0f',
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  '0x0000000000085d4780b73119b644ae5ecd22b376',
+  '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643',
+  '0x39aa39c021dfbae8fac545936693ac917d5e7563',
+  '0x86fadb80d8d2cff3c3680819e4da99c10232ba0f',
+  '0x57ab1ec28d129707052df4df418d58a2d46d5f51',
+  '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
+  '0xc00e94cb662c3520282e6f5717214004a7f26888',
+  '0x514910771af9ca656af840dff83e8264ecf986ca',
+  '0x960b236a07cf122663c4303350609a66a7b288c0',
+  '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
+  '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
+  '0xdf5e0e81dff6faf3a7e52ba697820c5e32d806a8',
+  '0x853d955acef822db058eb8505911ed77f175b99e',
+  '0xa47c8bf37f92abed4a126bda807a7b7498661acd',
+  '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+  '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
+  '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+  '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
+]

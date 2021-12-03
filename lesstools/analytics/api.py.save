@@ -1,23 +1,20 @@
 import logging
-from django.utils import timezone
+
 import requests
 from python_graphql_client import GraphqlClient
 
 import dramatiq
 import asyncio
-import time
-from datetime import datetime
 
 from web3 import Web3
 
 from lesstools.analytics.models import Token
 from lesstools.settings import CMC_COIN_INFO_API_URL, CMC_MAP_API_URL, CMC_API_KEY, ETHPLORER_API_KEY, \
     ETHPLORER_TOKEN_INFO_API_URL
-from lesstools.settings import SWAP, NETWORKS, SUSHISWAP, POOLS_EMOJI, TELEGRAM_CHAT_ID_2, EXECLUDE_LIST
+from lesstools.settings import SWAP, NETWORKS, TELEGRAM_CHAT_ID, SUSHISWAP
 from lesstools.analytics.models import NewPairCount
-
+~.
 from tgbot.settings import bot
-
 
 CMC_PAGE_SIZE = 10000
 
@@ -54,13 +51,7 @@ def mapping_update(run_full_update=False):
                     'bsc_address': normalized_address if (normalized_address is not None and
                                                           token['platform']['id'] == Token.BSC_PLATFORM_CMC_ID) else None,
                     'polygon_address': normalized_address if (normalized_address is not None and
-                                                              token['platform']['id'] == Token.POLYGON_PLATFORM_CMC_ID) else None,
-                    'fantom_address': normalized_address if (normalized_address is not None and
-                                                             token['platform']['id'] == Token.FANTOM_PLATFORM_CMC_ID) else None,
-                    'xdai_address': normalized_address if (normalized_address is not None and
-                                                           token['platform']['id'] == Token.XDAI_PLATFOM_CMC_ID) else None,
-                    'avalanche': normalized_address if (normalized_address is not None and
-                                                        token['platform']['id'] == Token.AVALANCHE_PLATFORM_CMC_ID) else None})
+                                                              token['platform']['id'] == Token.POLYGON_PLATFORM_CMC_ID) else None})
             elif not Token.objects.filter(cmc_id=token['id']).exists():
                 Token(cmc_id=token['id'],
                       name=token['name'],
@@ -73,16 +64,7 @@ def mapping_update(run_full_update=False):
                                                              'id'] == Token.BSC_PLATFORM_CMC_ID) else None,
                       polygon_address=normalized_address if (normalized_address is not None and
                                                              token['platform'][
-                                                                 'id'] == Token.POLYGON_PLATFORM_CMC_ID) else None,
-                      fantom_address=normalized_address if (normalized_address is not None and
-                                                         token['platform'][
-                                                             'id'] == Token.FANTOM_PLATFORM_CMC_ID) else None,
-                      xdai_address=normalized_address if (normalized_address is not None and
-                                                         token['platform'][
-                                                             'id'] == Token.XDAI_PLATFORM_CMC_ID) else None,
-                      avalanche_address=normalized_address if (normalized_address is not None and
-                                                         token['platform'][
-                                                             'id'] == Token.AVALANCHE_PLATFORM_CMC_ID) else None).save()
+                                                                 'id'] == Token.POLYGON_PLATFORM_CMC_ID) else None).save()
 
         paginate_from += CMC_PAGE_SIZE
         cmc_request = requests.get(CMC_MAP_API_URL, headers={'X-CMC_PRO_API_KEY': CMC_API_KEY},
@@ -157,12 +139,6 @@ def info_from_cmc(token_address, token_name, token_symbol, platform):
         token = Token.objects.get(bsc_address=token_address)
     elif platform == 'POLYGON' and Token.objects.filter(polygon_address=token_address).exists():
         token = Token.objects.get(polygon_address=token_address)
-    elif platform == 'FANTOM' and Token.objects.filter(fantom_address=token_address).exists():
-        token = Token.objects.get(fantom_address=token_address)
-    elif platform == 'XDAI' and Token.objects.filter(xdai_address=token_address).exists():
-        token = Token.objects.get(xdai_address=token_address)
-    elif platform == 'AVALANCHE' and Token.objects.filter(avalanche_address=token_address).exists():
-        token = Token.objects.get(avalanche_address=token_address)
     #     implies that CoinMarketCap doesn't have coins with both same name & symbol
     elif Token.objects.filter(name=token_name, symbol=token_symbol).exists():
         token = Token.objects.get(name=token_name, symbol=token_symbol)
@@ -197,12 +173,7 @@ def info_from_cmc(token_address, token_name, token_symbol, platform):
                 token.bsc_address = normalized_address
             elif platform['contractId'] == Token.POLYGON_PLATFORM_CMC_ID:
                 token.polygon_address = normalized_address
-            elif platform['contractId'] == Token.FANTOM_PLATFORM_CMC_ID:
-                token.fantom_address = normalized_address
-            elif platform['contractId'] == Token.XDAI_PLATFORM_CMC_ID:
-                token.xdai_address = normalized_address
-            elif platform['contractId'] == Token.AVALANCHE_PLATFORM_CMC_ID:
-                token.avalanche_address = normalized_address
+
     token.cmc_slug = data['slug']
 
     if 'statistics' in data:
@@ -251,25 +222,18 @@ def candles_creater(pair_id, url, time_interval, candles):
       {
             pairs(where: {id: "%s"}) {
                 id
-                token1 {
-                    id
-                }
                 swaps(where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc) {
                     timestamp
                     token0PriceUSD
                     token0PriceETH
                     token1PriceUSD
                     token1PriceETH
-                    }
-                 }
+                  }
+           }
         }
     """ % (pair_id, limits[-1][1])
-    try:
-        response_data = client.execute(query=query)
-    except:
-        return {'error': 'api not reach'}
-    if response_data['data']['pairs'] == []:
-        return {'error': 'Pair not found'}
+    response_data = client.execute(query=query)
+
     candles = []
     cache = []
     for limit in limits:
@@ -290,15 +254,9 @@ def candles_creater(pair_id, url, time_interval, candles):
     times = {}
     count = 0
     for candle in candles:
-        usd_list_for_sort = []
-        times = {}
         for swap in candle:
-            if response_data['data']['pairs'][0]['token1']['id'] in EXECLUDE_LIST:
-                usd_list_for_sort.append(swap['token0PriceUSD'])
-                times[swap['timestamp']] = swap['token0PriceUSD']
-            else:
-                usd_list_for_sort.append(swap['token1PriceUSD'])
-                times[swap['timestamp']] = swap['token1PriceUSD']
+            usd_list_for_sort.append(swap['token1PriceUSD'])
+            times[swap['timestamp']] = swap['token1PriceUSD']
         sort = sorted(usd_list_for_sort)
         sorted_tuple = sorted(times.items(), key=lambda x: x[0])
         if len(usd_list_for_sort) > 0 and len(candles[count]):
@@ -308,7 +266,6 @@ def candles_creater(pair_id, url, time_interval, candles):
             result.append('')
         count += 1
         usd_list_for_sort = []
-        print(result)
     candle = {}
     time_count = 0
     for x in result:
@@ -337,9 +294,10 @@ def candles_creater(pair_id, url, time_interval, candles):
 @dramatiq.actor(max_retries=0)
 def send_to_chat(data, name):
     print('Sending telegram message', flush=True)
-    def task(data):
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID_2, text=data, disable_web_page_preview=True)
-    task(data=data)
+    async def task(data):
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=data)
+        await asyncio.sleep(1)
+    asyncio.run(task(data=data))
 
 
 def swap_data(name: str):
@@ -352,21 +310,13 @@ def swap_data(name: str):
                       pairCount
                       }
     }"""
-    if name in SUSHISWAP:
-        query = """{
-                     factories{
-                       pairCount
-                       }
-                    }"""
+    description = "Bot name : LessTools New Pairs Bot\nDescriptions of Bot :\nWebsite : https://less.xyz\nTwitter : https://twitter.com/lesstoken\nChat : t.me/lesstoken\n"
     response_data = client.execute(query=query)
     print(response_data, flush=True)
-    print(datetime.now().timestamp() > NewPairCount.objects.get(name=name).count, flush=True)
-    if datetime.now().timestamp() > NewPairCount.objects.get(name=name).count:
+    if response_data['data']['uniswapFactories'][0]['pairCount'] > NewPairCount.objects.get(name=name).count:
         query = """{
-                     pairs(where: {createdAtTimestamp_gte: "%s"}, orderBy: createdAtTimestamp, orderDirection: desc){
+                     pairs(first: %d, orderDirection: desc){
                        id
-                       createdAtTimestamp
-                       reserveUSD
                        token0{
                          symbol
                          name
@@ -375,16 +325,13 @@ def swap_data(name: str):
                        token1{
                          symbol
                          name
-                         totalLiquidity
                        }
                      }
-                   }""" % NewPairCount.objects.get(name=name).count
+                   }""" % int((response_data['data']['uniswapFactories'][0]['pairCount']) - NewPairCount.objects.get(name=name).count)
         if name in SUSHISWAP:
             query = """{
-                     pairs(where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc){
+                     pairs(first: %d, orderDirection: desc){
                        id
-                       timestamp
-                       reserveUSD
                        token0{
                          symbol
                          name
@@ -393,44 +340,30 @@ def swap_data(name: str):
                        token1{
                          symbol
                          name
-                         liquidity
                        }
                      }
-                   }""" % NewPairCount.objects.get(name=name).count
+                   }""" % int((response_data['data']['uniswapFactories'][0]['pairCount']) - NewPairCount.objects.get(name=name).count)
 
         try:
             res_data = client.execute(query=query)
-            print(res_data['data']['pairs'], flush=True)
-        except Exception as e:
-            print(e, flush=True)
+            print(res_data)
+        except:
             return False
-        print('data', res_data['data'], flush=True)
         for new_pair in res_data['data']['pairs']:
-            liq = new_pair['reserveUSD']
-            print('liq: ', liq, flush=True)
-            if NETWORKS[name] == 'bsc':
-                url = f'https://tools.less.xyz/binance/pair-explorer/{new_pair["id"]}'
-            elif NETWORKS[name] == 'matic':
-                url = f'https://tools.less.xyz/polygon/pair-explorer/{new_pair["id"]}'
-            elif NETWORKS[name] == 'mainnet':
-                url = f'https://tools.less.xyz/ethereum/pair-explorer/{new_pair["id"]}'
-            else:
-                url = f'https://tools.less.xyz/{NETWORKS[name]}/pair-explorer/{new_pair["id"]}'
-            data = '{emoji}New pair at {swap}{emojiend}\n\nNetwork: {network}\n\n{token_name} ({token0_symbol}/{token1_symbol})\n\nInitial Liquidity: ${liquidity}\n\nToken Contract:\n{id}\n\nLESSTools:\n{url}'.format(
-                                                                 swap=name.title(),
-                                                                 network=NETWORKS[name].title(), token_name=new_pair['token0']['name'],
+
+            data = '{description}BOT DATA SHOWING\nNew pair at {swap}\nNetwork:{network}\n{token_name} ({token0_symbol}/{token1_symbol})\nInitial Liquidity:{liquidity}\nToken Contract:\n{id}'.format(
+                                                                 description=description, swap=name,
+                                                                 network=NETWORKS[name], token_name=new_pair['token0']['name'],
                                                                  token0_symbol=new_pair['token0']['symbol'],
                                                                  token1_symbol=new_pair['token1']['symbol'],
-                                                                 liquidity=round(float(liq), 2),
-                                                                 id=new_pair['id'], url=url,
-                                                                 emoji=POOLS_EMOJI[name], emojiend=POOLS_EMOJI[name])
+                                                                 liquidity=new_pair['token0']['totalLiquidity'],
+                                                                 id=new_pair['id'])
             pair = NewPairCount.objects.get(name=name)
-            print(pair.count, flush=True)
-            pair.count = datetime.now().timestamp()
+            pair.count += 1
             pair.save()
 
             send_to_chat.send(data=data, name=name)
-            time.sleep(5)
+
 
 @dramatiq.actor(max_retries=0)
 def swap_check():
