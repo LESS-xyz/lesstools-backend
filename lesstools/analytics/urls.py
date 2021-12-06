@@ -6,4 +6,5 @@ urlpatterns = [
     path('manual_cmc_mapping_update', manual_cmc_mapping_update, name='Manual update of CoinMarketCap IDs map'),
     path('pair_vote', pair_vote, name='Vote for pair (like/dislike)'),
     path('candles/<str:pair_id>&<str:pool>&<str:time_interval>&<int:candles>', Candles.as_view(), name='Create candles')
+    path('candles/<str:pair_id>&<str:pool>&<str:time_interval>', Candles.as_view(), name='Create candles')
 ]

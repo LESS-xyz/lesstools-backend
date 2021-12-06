@@ -19,6 +19,9 @@ from lesstools.analytics.models import NewPairCount
 from tgbot.settings import bot
 
 
+from django.db.models import Q
+from django.utils import timezone
+
 CMC_PAGE_SIZE = 10000
 
 
@@ -105,7 +108,8 @@ def try_extend_if_needed(token: Token, platform: str):
             return token
 
         if token.price_in_usd is None or token.price_in_usd == 0:
-            token.price_in_usd = data['price']['rate'] if (data['price'] and data['price']['currency'] == 'USD') else None
+            token.price_in_usd = data['price']['rate'] if (
+                        data['price'] and data['price']['currency'] == 'USD') else None
         if token.total_supply is None or token.total_supply == 0:
             token.total_supply = data['totalSupply']
         if token.holders_count is None or token.holders_count == 0:
