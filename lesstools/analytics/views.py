@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from lesstools.accounts.models import AdvUser
-from lesstools.analytics.models import Pair, UserPairVote
+from lesstools.analytics.models import Pair, UserPairVote, MainToken, HotPairManager
 from lesstools.analytics.serializers import PairSerializer, UserPairVoteSerializer
 from lesstools.settings import SWAP
 
@@ -197,3 +197,22 @@ class Candles(APIView):
         elif graph_response == {'error': 'api not reach'}:
             return Response(graph_response, status=status.HTTP_504_GATEWAY_TIMEOUT)
         return Response(graph_response, status=status.HTTP_200_OK)
+
+
+class AdminTokens(APIView):
+    @swagger_auto_schema(
+        operation_desription='Admin tokens and pairs',
+        response={200: 'Done'}
+    )
+    def get(self):
+        main_token = MainToken.objects.first()
+        hot_pairs = HotPairManager.objects.all()
+        data = {
+                'main_token': {
+                               'name': main_token.name,
+                               'address': main_token.address,
+                               'image': main_token.image
+                              },
+               }
+        data['pairs'] = [{'name': pair.name, 'address': pair.address, 'image': pair.image} for pair in hot_pairs]
+        return Response(data, status=status.HTTP_200_OK)

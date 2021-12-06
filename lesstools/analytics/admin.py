@@ -1,5 +1,5 @@
 from django.contrib import admin
-from lesstools.analytics.models import Token, Pair, UserPairVote
+from lesstools.analytics.models import Token, Pair, UserPairVote, HotPairManager, MainToken
 
 
 class PairAdmin(admin.ModelAdmin):
@@ -18,3 +18,5 @@ class UserPairVoteAdmin(admin.ModelAdmin):
 admin.site.register(Token, TokenAdmin)
 admin.site.register(Pair, PairAdmin)
 admin.site.register(UserPairVote, UserPairVoteAdmin)
+admin.site.register(HotPairManager)
+admin.site.register(MainToken)

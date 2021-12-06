@@ -80,3 +80,15 @@ class UserPairVote(models.Model):
 class NewPairCount(models.Model):
     name = models.CharField(max_length=64)
     count = models.PositiveIntegerField()
+
+
+class HotPairManager(models.Model):
+    name = models.CharField(max_length=16)
+    address = models.CharField(max_length=128)
+    image = models.FileField(upload_to='/images/')
+
+
+class MainToken(models.Model):
+    name = models.CharField(max_length=16)
+    address = models.CharField(max_length=128)
+    image = models.FileField(upload_to='/images/')
