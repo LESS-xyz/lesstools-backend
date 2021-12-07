@@ -18,6 +18,9 @@ from lesstools.settings import SWAP
 
 from lesstools.analytics.api import mapping_update, info_from_cmc, info_from_ethplorer, try_extend_if_needed, candles_creater
 
+from django.http import HttpResponse
+
+
 CMC_PAGE_SIZE = 10000
 
 
@@ -194,25 +197,31 @@ class Candles(APIView):
         graph_response = candles_creater(pair_id=pair_id, url=SWAP[pool], time_interval=time_interval, candles=candles)
         if graph_response == {'error': 'Pair not found'}:
             return Response(graph_response, status=status.HTTP_404_NOT_FOUND)
-        elif graph_response == {'error': 'api not reach'}:
+        elif graph_response == {'error': 'Api not reach'}:
             return Response(graph_response, status=status.HTTP_504_GATEWAY_TIMEOUT)
         return Response(graph_response, status=status.HTTP_200_OK)
 
 
 class AdminTokens(APIView):
     @swagger_auto_schema(
-        operation_desription='Admin tokens and pairs',
-        response={200: 'Done'}
+        operation_description="Admin pairs and tokens",
+        responses={200: 'Success'}
     )
-    def get(self):
+    def get(self, request):
         main_token = MainToken.objects.first()
+        logging.info(main_token)
+        if main_token is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         hot_pairs = HotPairManager.objects.all()
+        logging.info(hot_pairs)
         data = {
                 'main_token': {
                                'name': main_token.name,
                                'address': main_token.address,
-                               'image': main_token.image
+                               'image': main_token.image.url
                               },
                }
-        data['pairs'] = [{'name': pair.name, 'address': pair.address, 'image': pair.image} for pair in hot_pairs]
+        logging.info(data)
+        data['pairs'] = [{'name': pair.name, 'address': pair.address, 'image': pair.image.url} for pair in hot_pairs]
+        logging.info(data)
         return Response(data, status=status.HTTP_200_OK)

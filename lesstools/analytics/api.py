@@ -258,7 +258,7 @@ def candles_creater(pair_id, url, time_interval, candles):
                 token1 {
                     id
                 }
-                swaps(where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc) {
+                swaps(first:1000, where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc) {
                     timestamp
                     token0PriceUSD
                     token0PriceETH
@@ -312,7 +312,7 @@ def candles_creater(pair_id, url, time_interval, candles):
             result.append('')
         count += 1
         usd_list_for_sort = []
-        print(result)
+    print(result)
     candle = {}
     time_count = 0
     for x in result:

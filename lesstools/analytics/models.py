@@ -85,10 +85,10 @@ class NewPairCount(models.Model):
 class HotPairManager(models.Model):
     name = models.CharField(max_length=16)
     address = models.CharField(max_length=128)
-    image = models.FileField(upload_to='/images/')
+    image = models.FileField(upload_to='images/')
 
 
 class MainToken(models.Model):
     name = models.CharField(max_length=16)
     address = models.CharField(max_length=128)
-    image = models.FileField(upload_to='/images/')
+    image = models.FileField(upload_to='images/')
