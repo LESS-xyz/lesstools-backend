@@ -103,6 +103,7 @@ def try_extend_if_needed(token: Token, platform: str):
                                          params={'apiKey': ETHPLORER_API_KEY})
         if ethplorer_request.status_code == 200:
             data = ethplorer_request.json()
+            logging.info(data)
         else:
             logging.error('error on Ethplorer data retrieval')
             return token
@@ -141,7 +142,7 @@ def info_from_ethplorer(token_address):
         'name': data['name'],
         'symbol': data['symbol'],
         'price_in_usd': data['price']['rate'] if (data['price'] and data['price']['currency'] == 'USD') else None,
-        'total_supply': data['totalSupply'],
+        'total_supply': int(data['totalSupply']) * 10 ** - int(data['decimals']),
         'holders_count': data['holdersCount'],
         'website_url': data['website'] if 'website' in data else None,
         'chat_urls': [data['telegram']] if 'telegram' in data else None,
@@ -235,8 +236,17 @@ def candles_creater(pair_id, url, time_interval, candles):
     now = int(timezone.now().timestamp())
     time = {
         'minute': 60,
+        '3minute': 60*3,
+        '5minute': 60*5,
+        '15minute': 60*15,
+        '30minute': 60*30,
+        '45minute': 60*45,
         'hour': 60 * 60,
+        '2hour': 60*60*2,
+        '4hour': 60*60*4,
+        '12hour': 60*60*12,
         'day': 60 * 60 * 24,
+        '3day':60*60*24*3,
         'week': 60 * 60 * 24 * 7,
         'month': 60 * 60 * 24 * 30
     }
@@ -290,8 +300,6 @@ def candles_creater(pair_id, url, time_interval, candles):
         cache = []
 
     result = []
-    usd_list_for_sort = []
-    times = {}
     count = 0
     for candle in candles:
         usd_list_for_sort = []
@@ -312,15 +320,21 @@ def candles_creater(pair_id, url, time_interval, candles):
             result.append('')
         count += 1
         usd_list_for_sort = []
-    print(result)
     candle = {}
     time_count = 0
+    start_value = 0
+    result.reverse()
     for x in result:
+        if start_value == 0:
+            try:
+                start_value = x['start'][1]
+            except:
+                pass
         try:
             candle[str(time_count)] = {
                 'start_time': limits[time_count][0],
                 'end_time': limits[time_count][1],
-                'open': x['start'][1],
+                'open': start_value,
                 'close': x['end'][1],
                 'high': x['high'],
                 'low': x['low']
@@ -334,6 +348,10 @@ def candles_creater(pair_id, url, time_interval, candles):
                 'high': ' ',
                 'low': ' '
             }
+        try:
+            start_value = x['end'][1]
+        except:
+            pass
         time_count += 1
     return candle
 
