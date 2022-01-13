@@ -260,34 +260,41 @@ def candles_creater(pair_id, url, time_interval, candles):
         limits.append([t['end'], t['start']])
         t['end'] = t['start']
         t['start'] -= time[time_interval]
-
-    query = """
-      {
-            pairs(where: {id: "%s"}) {
-                id
-                token1 {
+    data = []
+    pass_count = 0
+    while True:
+        query = """
+          {
+                pairs(where: {id: "%s"}) {
                     id
-                }
-                swaps(first:1000, where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc) {
-                    timestamp
-                    token0PriceUSD
-                    token0PriceETH
-                    token1PriceUSD
-                    token1PriceETH
+                    token1 {
+                        id
                     }
-                 }
-        }
-    """ % (pair_id, limits[-1][1])
-    try:
-        response_data = client.execute(query=query)
-    except:
-        return {'error': 'api not reach'}
-    if response_data['data']['pairs'] == []:
-        return {'error': 'Pair not found'}
+                    swaps(skip:%s, first:1000, where: {timestamp_gte: "%s"}, orderBy: timestamp, orderDirection: desc) {
+                        timestamp
+                        token0PriceUSD
+                        token0PriceETH
+                        token1PriceUSD
+                        token1PriceETH
+                        amountUSD
+                        }
+                     }
+            }
+            """ % (pair_id, pass_count, limits[-1][1])
+        try:
+            response_data = client.execute(query=query)
+        except:
+            return {'error': 'api not reach'}
+        if not response_data or pass_count == 5000:
+            break
+        else:
+            pass_count += 1000
+            data.append(response_data['data']['pairs'][0]['swaps'])
     candles = []
     cache = []
+    #print(data, flush=True)
     for limit in limits:
-        for r in response_data['data']['pairs'][0]['swaps']:
+        for r in data[0]:
             if limit[0] >= int(r['timestamp']) > limit[1]:
                 cache.append({
                     'timestamp': r['timestamp'],
@@ -295,6 +302,7 @@ def candles_creater(pair_id, url, time_interval, candles):
                     'token0PriceETH': r['token0PriceETH'],
                     'token1PriceUSD': r['token1PriceUSD'],
                     'token1PriceETH': r['token1PriceETH'],
+                    'amountUSD': r['amountUSD'],
                 })
         candles.append(cache)
         cache = []
@@ -304,6 +312,7 @@ def candles_creater(pair_id, url, time_interval, candles):
     for candle in candles:
         usd_list_for_sort = []
         times = {}
+        volume = 0
         for swap in candle:
             if response_data['data']['pairs'][0]['token1']['id'] in EXECLUDE_LIST:
                 usd_list_for_sort.append(swap['token0PriceUSD'])
@@ -311,11 +320,12 @@ def candles_creater(pair_id, url, time_interval, candles):
             else:
                 usd_list_for_sort.append(swap['token1PriceUSD'])
                 times[swap['timestamp']] = swap['token1PriceUSD']
+            volume += float(swap['amountUSD'])
         sort = sorted(usd_list_for_sort)
         sorted_tuple = sorted(times.items(), key=lambda x: x[0])
         if len(usd_list_for_sort) > 0 and len(candles[count]):
             result.append(dict(**candles[count][0], **{'high': sort[-1], 'low': sort[0],
-                                                       'start': sorted_tuple[0], 'end': sorted_tuple[-1]}))
+                                                       'start': sorted_tuple[0], 'end': sorted_tuple[-1], 'volume': volume}))
         else:
             result.append('')
         count += 1
@@ -324,8 +334,9 @@ def candles_creater(pair_id, url, time_interval, candles):
     time_count = 0
     start_value = 0
     result.reverse()
+    #limits.reverse()
     for x in result:
-        if start_value == 0:
+        if start_value == 0 and candles != 1:
             try:
                 start_value = x['start'][1]
             except:
@@ -337,22 +348,25 @@ def candles_creater(pair_id, url, time_interval, candles):
                 'open': start_value,
                 'close': x['end'][1],
                 'high': x['high'],
-                'low': x['low']
+                'low': x['low'],
+                'volume': x['volume']
             }
         except:
             candle[str(time_count)] = {
                 'start_time': limits[time_count][0],
                 'end_time': limits[time_count][1],
-                'start': ' ',
-                'end': ' ',
-                'high': ' ',
-                'low': ' '
+                'open': '',
+                'close': '',
+                'high': '',
+                'low': '',
+                'volume': 0
             }
         try:
             start_value = x['end'][1]
         except:
             pass
         time_count += 1
+    print('DONE', flush=True)
     return candle
 
 
