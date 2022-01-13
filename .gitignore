@@ -118,3 +118,6 @@ gunicorn.conf.py
 node_modules/
 
 .docker
+*.save
+*.save.*
+**/migrations/**
